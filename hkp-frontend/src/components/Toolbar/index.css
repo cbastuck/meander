@@ -1,0 +1,8 @@
+#runtime-dropdown .dropdown .menu .item {
+  font-size: 12px !important;
+}
+
+#runtime-dropdown {
+  font-size: 12px;
+  letter-spacing: 1px;
+}

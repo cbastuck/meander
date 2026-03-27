@@ -1,0 +1,216 @@
+@font-face {
+  font-family: "hkp-fnt-sans";
+  src: url("./assets/fonts/Walkway Black.ttf") format("truetype");
+}
+
+font-face {
+  font-family: "hkp-fnt-serif-dry";
+  src: url("./assets/fonts/cutive.regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "hkp-fnt-serif";
+  src: url("./assets/fonts/Cabin-VariableFont_wdth,wght.ttf") format("truetype");
+  size-adjust: 115%;
+}
+
+@font-face {
+  font-family: "hkp-fnt-lato";
+  src: url("./assets/fonts/lato-v15-latin-regular.ttf") format("truetype");
+}
+
+:root {
+  color-scheme: light dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+.hkp-fnt-color {
+  color: #555;
+}
+
+.hkp-fnt-spacing {
+  letter-spacing: 1.2;
+}
+
+.hkp-card-border {
+  border: solid 1px lightgray;
+  outline: none;
+  box-shadow: 10px 18px 20px -26px hsla(0, 0%, 0%, 0.2);
+  border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+}
+
+.hkp-collection-border {
+  border: solid 1px lightgray;
+  outline: none;
+  box-shadow: 10px 18px 20px -26px hsla(0, 0%, 0%, 0.2);
+  border-radius: 125px 25px 125px 20px/2px 5px 10px 4px;
+}
+
+.hkp-input-ghost input {
+  font-family: hkp-fnt-sans !important;
+  border: none !important;
+  margin-top: 3px !important;
+  color: #888 !important;
+  font-size: 12px !important;
+  padding-left: 0px !important;
+  width: fit-content !important;
+  letter-spacing: 1px !important;
+  font-weight: bold;
+}
+
+.hkp-button {
+  font-family: hkp-fnt-sans !important;
+  color: #888 !important;
+}
+
+.hkp-button:hover {
+  background-color: #fafafa !important;
+  border-color: #888 !important;
+}
+
+.hkp-button-ghost {
+  background-color: white !important;
+  border: solid 1px rgb(186, 186, 186) !important;
+}
+
+.hkp-button-borderless {
+  background-color: white !important;
+  border: none !important;
+}
+
+.hkp-button:active {
+  background-color: rgb(66, 132, 196) !important;
+  color: white !important;
+  font-style: bold;
+}
+
+.hkp-button-blue {
+  font-family: hkp-fnt-sans !important;
+  background-color: rgb(70, 79, 109) !important;
+  color: white !important;
+  border-color: rgb(223, 223, 223) !important;
+  font-size: 11pt !important;
+}
+
+.hkp-button-blue:hover {
+  background-color: rgb(66, 132, 196) !important;
+  border-color: #444 !important;
+}
+
+.hkp-button-blue:active {
+  background-color: rgb(217, 229, 238) !important;
+  border-color: #898989 !important;
+  color: #444 !important;
+}
+
+.hkp-button-blue:disabled {
+  background-color: rgba(232, 232, 232, 0.511) !important;
+  border-color: #898989 !important;
+  color: #444 !important;
+}
+
+.hkp-icon-clickable-danger:hover {
+  color: red;
+}
+
+.hkp-icon-clickable-danger:active {
+  color: darkred;
+}
+
+.ui.dropdown > .text {
+  margin-top: 2px;
+}
+
+/* consistent input with label appearance across application */
+.labeled .label {
+  min-width: 65px;
+}
+
+.ui.accordion:not(.styled) .title ~ .content:not(.ui) {
+  padding: 0;
+}
+.ui.accordion .title ~ .content {
+  display: block;
+}
+.expand {
+  transition: 0.5s max-height ease-out, 0.5s opacity ease-out;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+.active.expand {
+  max-height: 1000px;
+  opacity: 1;
+}
+
+/* blockquote source */
+blockquote {
+  line-height: 1.6;
+  position: relative;
+  margin: 0;
+  padding: 0.5rem;
+  font-style: italic;
+}
+
+blockquote:before,
+blockquote:after {
+  position: absolute;
+  color: #f1efe6;
+  font-size: 8rem;
+  width: 4rem;
+  height: 4rem;
+}
+
+blockquote:before {
+  content: "“";
+  left: -5rem;
+  top: -2rem;
+}
+
+blockquote:after {
+  content: "”";
+  right: -5rem;
+  bottom: 1rem;
+}
+
+.hkp-fx-hover-grow {
+  transform: scale(1);
+  transition: transform 0.5s ease;
+}
+
+.hkp-fx-hover-grow:hover {
+  transform: scale(1.3);
+  transition: transform 0.5s ease;
+}
+
+.hkp-lyt-vspace {
+  margin: 10px 0px;
+}
+
+.hkp-inp-error {
+  border-color: rgb(213, 108, 108) !important;
+}

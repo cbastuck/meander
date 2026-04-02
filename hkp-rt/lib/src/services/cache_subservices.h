@@ -1,10 +1,11 @@
 #pragma once
 
-#include <iostream>
-#include <fstream>
-#include <regex>
-#include <filesystem>
 #include <chrono>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <regex>
+#include <vector>
 
 #include <types/types.h>
 #include <service.h>
@@ -12,17 +13,19 @@
 
 #include "./sha256_openssl.h"
 #include "../common/inja.h"
+#include "../sub_runtime.h"
+#include "../uuid.h"
 
 namespace hkp {
 
-class Cache : public Service 
+class CacheSubservices : public Service
 {
 public:
-  static std::string serviceId() { return "cache"; }
+  static std::string serviceId() { return "cache-subservices"; }
 
-  Cache(const std::string& instanceId)
-     : Service(instanceId, serviceId())
-  { 
+  explicit CacheSubservices(const std::string& instanceId)
+    : Service(instanceId, serviceId())
+  {
   }
 
   json configure(Data data) override
@@ -43,6 +46,55 @@ public:
       {
         updateExcludedRegex();
       }
+
+      if (buf->contains("pipeline") && (*buf)["pipeline"].is_array())
+      {
+        m_subserviceConfig.clear();
+        for (const auto& cfg : (*buf)["pipeline"])
+        {
+          m_subserviceConfig.push_back(cfg);
+        }
+        rebuildSubservices();
+      }
+      else if (buf->contains("appendService"))
+      {
+        auto svcCfg = (*buf)["appendService"];
+        if (!svcCfg.contains("instanceId") || svcCfg["instanceId"].get<std::string>().empty())
+        {
+          svcCfg["instanceId"] = generateUUID();
+        }
+        syncSubserviceStates();
+        m_subserviceConfig.push_back(std::move(svcCfg));
+        rebuildSubservices();
+      }
+      else if (buf->contains("removeService") && (*buf)["removeService"].is_string())
+      {
+        const std::string id = (*buf)["removeService"].get<std::string>();
+        syncSubserviceStates();
+        m_subserviceConfig.erase(
+          std::remove_if(m_subserviceConfig.begin(), m_subserviceConfig.end(),
+            [&id](const json& cfg) { return cfg.value("instanceId", "") == id; }),
+          m_subserviceConfig.end()
+        );
+        rebuildSubservices();
+      }
+      else if (buf->contains("configureService") && (*buf)["configureService"].is_object())
+      {
+        const auto& cfg = (*buf)["configureService"];
+        if (cfg.contains("instanceId") && cfg.contains("state") && m_subservices)
+        {
+          const std::string id = cfg["instanceId"].get<std::string>();
+          for (auto it = m_subservices->begin(); it != m_subservices->end(); ++it)
+          {
+            if ((*it)->getId() == id)
+            {
+              (*it)->configure(cfg["state"]);
+              syncSubserviceStates();
+              break;
+            }
+          }
+        }
+      }
     }
     return Service::configure(data);
   }
@@ -54,14 +106,29 @@ public:
 
   json getState() const override
   {
+    json pipeline = json::array();
+    if (m_subservices)
+    {
+      for (auto it = m_subservices->begin(); it != m_subservices->end(); ++it)
+      {
+        const auto& svc = *it;
+        pipeline.push_back(json{
+          {"serviceId", svc->getServiceId()},
+          {"instanceId", svc->getId()},
+          {"state", svc->getState()}
+        });
+      }
+    }
+
     return Service::mergeStateWith(json{
-      { "key", m_key },
-      { "outputKey", m_outputKey },
-      { "persistRoot", m_persistRoot },
-      { "persistMode", m_persistMode },
-      { "filenameTemplate", m_filenameTemplate },
-      { "cacheDuration", m_cacheDuration },
-      { "excluded", m_excluded }
+      {"key", m_key},
+      {"outputKey", m_outputKey},
+      {"persistRoot", m_persistRoot},
+      {"persistMode", m_persistMode},
+      {"filenameTemplate", m_filenameTemplate},
+      {"cacheDuration", m_cacheDuration},
+      {"excluded", m_excluded},
+      {"pipeline", pipeline}
     });
   }
 
@@ -72,7 +139,7 @@ public:
     {
       return Null();
     }
-    
+
     auto key = getProperty<std::string>(*j, m_key);
     if (!key)
     {
@@ -86,7 +153,7 @@ public:
         return data;
       }
     }
-    
+
     bool forcedUpdate = false;
     auto maxAge = m_maxAge;
     auto cacheOptions = getProperty<json>(*j, "cacheOptions");
@@ -112,24 +179,15 @@ public:
       }
     }
 
-    // ── "filename" persist mode ────────────────────────────────────────────
-    // persistMode "filename": treat m_key as a path, derive a lookup filename
-    // (optionally via an inja filenameTemplate), check persistRoot for it, and
-    // early-return {"path":"<absolute>"} on hit.  On miss, call next(), persist
-    // the result, then return the same shape.
-    // The default "sha" mode (or no persistMode set) falls through to the
-    // existing SHA-based logic below — existing configs are unaffected.
     if (m_persistMode == "filename" && !m_persistRoot.empty() && !forcedUpdate)
     {
       const std::filesystem::path inPath(*key);
       std::string lookupName;
       if (!m_filenameTemplate.empty())
       {
-        // Build a template context from the incoming JSON plus path-derived
-        // helpers: {{ filename }}, {{ stem }}, {{ extension }}
         json ctx = *j;
-        ctx["filename"]  = inPath.filename().string();
-        ctx["stem"]      = inPath.stem().string();
+        ctx["filename"] = inPath.filename().string();
+        ctx["stem"] = inPath.stem().string();
         ctx["extension"] = inPath.extension().string();
         lookupName = processInjaTemplate(m_filenameTemplate, ctx);
       }
@@ -144,10 +202,10 @@ public:
         return makeEarlyReturn(Data(json{{m_outputKey, std::filesystem::absolute(candidate).string()}}));
       }
 
-      auto result = next(data);
-      if (!isNull(result))
+      auto missValue = processOnMiss(data);
+      if (!isNull(missValue))
       {
-        if (auto mixed = getMixedDataFromData(result))
+        if (auto mixed = getMixedDataFromData(missValue))
         {
           if (!mixed->binary.empty())
           {
@@ -158,7 +216,7 @@ public:
             }
           }
         }
-        else if (auto bin = getBinaryFromData(result))
+        else if (auto bin = getBinaryFromData(missValue))
         {
           std::ofstream file(candidate, std::ios::binary);
           if (file)
@@ -166,29 +224,28 @@ public:
             file.write(reinterpret_cast<const char*>(bin->data()), bin->size());
           }
         }
-        else if (auto str = getStringFromData(result))
+        else if (auto str = getStringFromData(missValue))
         {
           std::ofstream file(candidate);
           if (file)
           {
-             file << *str;
+            file << *str;
           }
-           
         }
-        else if (auto jResult = getJSONFromData(result))
+        else if (auto jResult = getJSONFromData(missValue))
         {
           std::ofstream file(candidate);
-          if (file) 
+          if (file)
           {
             file << jResult->dump();
           }
         }
       }
-      if (!isNull(result) && std::filesystem::exists(candidate))
+      if (!isNull(missValue) && std::filesystem::exists(candidate))
       {
         return makeEarlyReturn(Data(json{{m_outputKey, std::filesystem::absolute(candidate).string()}}));
       }
-      return makeEarlyReturn(result);
+      return makeEarlyReturn(missValue);
     }
 
     if (!forcedUpdate && !noCache)
@@ -206,7 +263,6 @@ public:
       auto path = m_persistRoot + "/" + sha;
       if (std::filesystem::exists(path))
       {
-        // Check if file is not older than cache duration
         auto lastWriteTime = std::filesystem::last_write_time(path);
         auto fileAge = std::chrono::file_clock::now() - lastWriteTime;
         if (maxAge == std::chrono::hours::zero() || fileAge <= maxAge)
@@ -222,11 +278,11 @@ public:
         }
       }
     }
-    
-    auto value = next(data);
+
+    auto value = processOnMiss(data);
     if (isNull(value))
     {
-        return value;
+      return value;
     }
 
     if (!noCache)
@@ -244,12 +300,55 @@ public:
         }
       }
     }
-    
 
     return makeEarlyReturn(value);
   }
 
+protected:
+  bool supportsSubservices() const override { return true; }
+
 private:
+  Data processOnMiss(Data data)
+  {
+    Data input = data;
+    if (m_subservices && !m_subservices->empty())
+    {
+      input = m_subservices->process(input);
+    }
+    return next(input);
+  }
+
+  void syncSubserviceStates()
+  {
+    if (!m_subservices)
+    {
+      return;
+    }
+
+    for (auto it = m_subservices->begin(); it != m_subservices->end(); ++it)
+    {
+      const auto& svc = *it;
+      for (auto& cfg : m_subserviceConfig)
+      {
+        if (cfg.value("instanceId", "") == svc->getId())
+        {
+          cfg["state"] = svc->getState();
+          break;
+        }
+      }
+    }
+  }
+
+  void rebuildSubservices()
+  {
+    json arr = json::array();
+    for (const auto& cfg : m_subserviceConfig)
+    {
+      arr.push_back(cfg);
+    }
+    m_subservices = createSubRuntime(arr);
+  }
+
   void updateExcludedRegex()
   {
     m_excludedRegex.clear();
@@ -259,7 +358,6 @@ private:
         m_excludedRegex.emplace_back(pattern);
       }
       catch (const std::regex_error&) {
-        // Skip invalid regex patterns
       }
     }
   }
@@ -292,25 +390,27 @@ private:
           return std::chrono::hours(value / 60);
         }
       }
-      
-      // No unit specified, assume hours
+
       return std::chrono::hours(value);
     }
     catch (...) {
-      return std::chrono::hours(48); // Fallback to default
+      return std::chrono::hours(48);
     }
   }
 
   std::string m_key;
-  std::string m_outputKey  = "path"; // defaults to "path" for backward compatibility
+  std::string m_outputKey = "path";
   std::string m_persistRoot;
-  std::string m_persistMode; // "sha" (default) | "filename"
+  std::string m_persistMode;
   std::string m_filenameTemplate;
   std::map<std::string, Data> m_cache;
   std::string m_cacheDuration;
   std::chrono::hours m_maxAge;
   std::vector<std::string> m_excluded;
   std::vector<std::regex> m_excludedRegex;
+
+  std::shared_ptr<SubRuntime> m_subservices;
+  std::vector<json> m_subserviceConfig;
 };
 
-}
+} // namespace hkp

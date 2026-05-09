@@ -44,9 +44,18 @@ jobs:
       - name: Build
         run: ./build.sh Release ON OFF
 
+      - name: Package app bundle
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          asset="meander-macos-${{ github.sha }}.zip"
+          ditto -c -k --sequesterRsrc --keepParent build/meander/Release/meander.app "${asset}"
+          echo "asset=${asset}" >> "$GITHUB_OUTPUT"
+
       - name: Upload artifact
         uses: actions/upload-artifact@v5
         with:
           name: meander-macos-${{ github.sha }}
-          path: build/meander/Release/meander.app
+          path: ${{ steps.package.outputs.asset }}
           retention-days: 30

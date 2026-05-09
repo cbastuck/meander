@@ -46,7 +46,7 @@ jobs:
         run: ./build.sh Release ON OFF
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: meander-macos-${{ github.sha }}
           path: build/meander/Release/meander.app

@@ -11,6 +11,7 @@ CONFIG="${1:-Release}"
 EMBEDDED_FRONTEND="${2:-ON}"
 UNIVERSAL_BINARY="${3:-OFF}"
 VCPKG_TARGET_TRIPLET=""
+VCPKG_BUILD_TYPE="release"
 
 if [[ "${EMBEDDED_FRONTEND}" != "ON" && "${EMBEDDED_FRONTEND}" != "OFF" ]]; then
     echo "ERROR: Second argument must be exactly ON or OFF."
@@ -28,6 +29,10 @@ if [[ "${EMBEDDED_FRONTEND}" == "OFF" && "${CONFIG}" != "Debug" && "${CONFIG}" !
     echo "ERROR: Dev server mode only supports Debug builds."
     echo "Use: ./build.sh Debug OFF"
     exit 2
+fi
+
+if [[ "${CONFIG}" == "Debug" || "${CONFIG}" == "debug" ]]; then
+    VCPKG_BUILD_TYPE="debug"
 fi
 
 if [[ "${UNIVERSAL_BINARY}" == "ON" ]]; then
@@ -82,6 +87,7 @@ echo "    vcpkg manifest: ${VCPKG_MANIFEST_DIR}/vcpkg.json"
 if [[ -n "${VCPKG_TARGET_TRIPLET}" ]]; then
     echo "    vcpkg triplet: ${VCPKG_TARGET_TRIPLET}"
 fi
+echo "    vcpkg build type: ${VCPKG_BUILD_TYPE}"
 
 CMAKE_ARGS=(
     -B "${BUILD_DIR}"
@@ -89,6 +95,7 @@ CMAKE_ARGS=(
     -DCMAKE_BUILD_TYPE="${CONFIG}"
     -DCMAKE_OSX_ARCHITECTURES="${OSX_ARCHITECTURES}"
     -DVCPKG_MANIFEST_DIR="${VCPKG_MANIFEST_DIR}"
+    -DVCPKG_BUILD_TYPE="${VCPKG_BUILD_TYPE}"
     -DBUILD_HKP_SAUCER=ON
     -DMEANDER_USE_EMBEDDED_FRONTEND="${EMBEDDED_FRONTEND}"
     -GXcode

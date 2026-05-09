@@ -1,0 +1,38 @@
+name: Build Meander macOS
+
+on:
+  push:
+    branches: [main, gh-actions]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: meander/frontend/package-lock.json
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: "3.31"
+
+      - name: Build
+        run: ./build.sh Release ON OFF
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: meander-macos-${{ github.sha }}
+          path: build/meander/Release/meander.app
+          retention-days: 30

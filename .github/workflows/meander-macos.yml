@@ -33,9 +33,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          vcpkg_baseline="bba8b52f6dea74159bba855ef00376e588d6ea0a"
           if [[ ! -f 3rdparty/vcpkg/scripts/buildsystems/vcpkg.cmake ]]; then
             git clone --depth 1 https://github.com/microsoft/vcpkg.git 3rdparty/vcpkg
           fi
+          git -C 3rdparty/vcpkg fetch --depth 1 origin "${vcpkg_baseline}"
+          git -C 3rdparty/vcpkg checkout --force "${vcpkg_baseline}"
           ./3rdparty/vcpkg/bootstrap-vcpkg.sh -disableMetrics
 
       - name: Build

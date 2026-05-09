@@ -20,7 +20,9 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: meander/frontend/package-lock.json
+          cache-dependency-path: |
+            meander/frontend/package-lock.json
+            hkp-frontend/package-lock.json
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v2

@@ -5,6 +5,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="${REPO_ROOT}/build"
 TOOLCHAIN="${REPO_ROOT}/3rdparty/vcpkg/scripts/buildsystems/vcpkg.cmake"
 FRONTEND_DIR="${REPO_ROOT}/meander/frontend"
+HKP_FRONTEND_DIR="${REPO_ROOT}/hkp-frontend"
 CONFIG="${1:-Release}"
 EMBEDDED_FRONTEND="${2:-ON}"
 UNIVERSAL_BINARY="${3:-OFF}"
@@ -38,6 +39,11 @@ echo "    frontend: ${FRONTEND_DIR}"
 echo "    embedded frontend: ${EMBEDDED_FRONTEND}"
 
 if [[ "${EMBEDDED_FRONTEND}" == "ON" ]]; then
+    if [[ ! -d "${HKP_FRONTEND_DIR}/node_modules" ]]; then
+        echo "==> Installing hkp-frontend dependencies"
+        npm --prefix "${HKP_FRONTEND_DIR}" ci
+    fi
+
     if [[ ! -d "${FRONTEND_DIR}/node_modules" ]]; then
         echo "==> Installing frontend dependencies"
         npm --prefix "${FRONTEND_DIR}" ci

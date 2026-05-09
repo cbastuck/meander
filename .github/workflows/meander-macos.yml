@@ -29,6 +29,15 @@ jobs:
         with:
           cmake-version: "3.31"
 
+      - name: Setup vcpkg
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -f 3rdparty/vcpkg/scripts/buildsystems/vcpkg.cmake ]]; then
+            git clone --depth 1 https://github.com/microsoft/vcpkg.git 3rdparty/vcpkg
+          fi
+          ./3rdparty/vcpkg/bootstrap-vcpkg.sh -disableMetrics
+
       - name: Build
         run: ./build.sh Release ON OFF
 

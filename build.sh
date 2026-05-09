@@ -60,6 +60,12 @@ echo "    build: ${BUILD_DIR}"
 echo "    universal binary: ${UNIVERSAL_BINARY}"
 echo "    architectures: ${OSX_ARCHITECTURES}"
 
+if [[ ! -f "${TOOLCHAIN}" ]]; then
+    echo "ERROR: Missing vcpkg toolchain file: ${TOOLCHAIN}"
+    echo "Ensure vcpkg is initialized at 3rdparty/vcpkg before running build.sh"
+    exit 2
+fi
+
 cmake \
     -B "${BUILD_DIR}" \
     -S "${REPO_ROOT}" \

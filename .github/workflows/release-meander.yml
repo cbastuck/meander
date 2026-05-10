@@ -30,6 +30,14 @@ permissions:
 jobs:
   build-and-release:
     runs-on: macos-latest
+    env:
+      APPLE_SIGNING_CERT_BASE64: ${{ secrets.APPLE_SIGNING_CERT_BASE64 }}
+      APPLE_SIGNING_CERT_PASSWORD: ${{ secrets.APPLE_SIGNING_CERT_PASSWORD }}
+      APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+
+      APPLE_NOTARY_API_KEY_BASE64: ${{ secrets.APPLE_NOTARY_API_KEY_BASE64 }}
+      APPLE_NOTARY_API_KEY_ID: ${{ secrets.APPLE_NOTARY_API_KEY_ID }}
+      APPLE_NOTARY_API_ISSUER_ID: ${{ secrets.APPLE_NOTARY_API_ISSUER_ID }}
 
     steps:
       - name: Checkout
@@ -66,6 +74,12 @@ jobs:
 
       - name: Build
         run: ./build.sh Release ON OFF
+
+      - name: Sign app bundle
+        if: ${{ env.APPLE_SIGNING_CERT_BASE64 != '' && env.APPLE_SIGNING_CERT_PASSWORD != '' && env.APPLE_SIGNING_IDENTITY != '' }}
+        shell: bash
+        run: |
+          bash ./sign.sh build/meander/Release/meander.app
 
       - name: Package app
         shell: bash

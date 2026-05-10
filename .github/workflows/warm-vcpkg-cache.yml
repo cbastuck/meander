@@ -1,12 +1,16 @@
-name: Build Meander macOS
+name: Warm vcpkg Cache (macOS)
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-  workflow_dispatch:
+    paths:
+      - "3rdparty/vcpkg.json"
+      - "3rdparty/vcpkg-triplets/*.cmake"
+      - ".github/workflows/warm-vcpkg-cache.yml"
 
 jobs:
-  build:
+  warm-cache:
     runs-on: macos-latest
     env:
       VCPKG_FEATURE_FLAGS: manifests,binarycaching
@@ -18,20 +22,6 @@ jobs:
         uses: actions/checkout@v5
         with:
           submodules: false
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: |
-            meander/frontend/package-lock.json
-            hkp-frontend/package-lock.json
-
-      - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v2
-        with:
-          cmake-version: "3.31"
 
       - name: Restore vcpkg cache
         uses: actions/cache@v4
@@ -71,21 +61,35 @@ jobs:
           git -C 3rdparty/vcpkg checkout --force "${vcpkg_baseline}"
           retry 3 ./3rdparty/vcpkg/bootstrap-vcpkg.sh -disableMetrics
 
-      - name: Build
-        run: ./build.sh Release ON OFF
-
-      - name: Package app bundle
-        id: package
+      - name: Warm vcpkg binary cache
         shell: bash
         run: |
           set -euo pipefail
-          asset="meander-macos-${{ github.sha }}.zip"
-          ditto -c -k --sequesterRsrc --keepParent build/meander/Release/meander.app "${asset}"
-          echo "asset=${asset}" >> "$GITHUB_OUTPUT"
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: meander-macos-${{ github.sha }}
-          path: ${{ steps.package.outputs.asset }}
-          retention-days: 30
+          retry() {
+            local attempts="$1"
+            shift
+            local n=1
+            until "$@"; do
+              if [[ "${n}" -ge "${attempts}" ]]; then
+                return 1
+              fi
+              n=$((n + 1))
+              sleep $((n * 2))
+            done
+          }
+
+          arch="$(uname -m)"
+          if [[ "${arch}" == "arm64" ]]; then
+            triplets=("arm64-osx" "arm64-osx-release")
+          else
+            triplets=("x64-osx" "x64-osx-release")
+          fi
+
+          for triplet in "${triplets[@]}"; do
+            echo "==> Warming manifest dependencies for triplet: ${triplet}"
+            retry 3 ./3rdparty/vcpkg/vcpkg install \
+              --x-manifest-root=3rdparty \
+              --overlay-triplets=3rdparty/vcpkg-triplets \
+              --triplet="${triplet}"
+          done

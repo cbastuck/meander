@@ -5,6 +5,7 @@ HKP_RT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="${HKP_RT_DIR}/build-tests"
 CONFIG="${1:-Debug}"
 SUITE="${2:-all}" # all | runtime | services
+OSX_ARCHITECTURES="$(uname -m)"
 
 usage() {
   echo "Usage: $(basename "$0") [Debug|Release|RelWithDebInfo|MinSizeRel] [all|runtime|services]"
@@ -20,6 +21,7 @@ cmake \
   -S "${HKP_RT_DIR}" \
   -B "${BUILD_DIR}" \
   -DCMAKE_BUILD_TYPE="${CONFIG}" \
+  -DCMAKE_OSX_ARCHITECTURES="${OSX_ARCHITECTURES}" \
   -DBUILD_TESTING=ON \
   -DBUILD_HKP_SAUCER=OFF
 

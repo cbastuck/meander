@@ -1,7 +1,7 @@
 name: Run Selected CI Tests
 
 on:
-  pull_request:
+  #pull_request:
   push:
     branches: [main]
   workflow_dispatch:

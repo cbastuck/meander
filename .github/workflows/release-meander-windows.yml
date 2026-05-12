@@ -1,0 +1,161 @@
+name: Release Meander Windows
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag, for example v0.9.0"
+        required: true
+      release_name:
+        description: "Release title"
+        required: true
+      target_ref:
+        description: "Branch or commit to release from"
+        required: true
+        default: "main"
+      prerelease:
+        description: "Mark as prerelease"
+        required: true
+        type: boolean
+        default: false
+      draft:
+        description: "Create as draft"
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    environment: release
+    env:
+      VCPKG_FEATURE_FLAGS: manifests,binarycaching
+      VCPKG_BINARY_SOURCES: clear;x-gha,readwrite;files,${{ github.workspace }}\.cache\vcpkg\binary,readwrite
+      VCPKG_DOWNLOADS: ${{ github.workspace }}\.cache\vcpkg\downloads
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.target_ref }}
+          submodules: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            meander/frontend/package-lock.json
+            hkp-frontend/package-lock.json
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: "3.31"
+
+      - name: Restore vcpkg cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .cache/vcpkg/binary
+            .cache/vcpkg/downloads
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('3rdparty/vcpkg.json', '3rdparty/vcpkg-triplets/*.cmake') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
+
+      - name: Setup vcpkg
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          function Invoke-Retry {
+            param(
+              [int]$Attempts,
+              [ScriptBlock]$Command
+            )
+            for ($n = 1; $n -le $Attempts; $n++) {
+              try {
+                & $Command
+                return
+              } catch {
+                if ($n -eq $Attempts) { throw }
+                Start-Sleep -Seconds ($n * 2)
+              }
+            }
+          }
+
+          New-Item -ItemType Directory -Force -Path .cache/vcpkg/binary | Out-Null
+          New-Item -ItemType Directory -Force -Path .cache/vcpkg/downloads | Out-Null
+
+          $vcpkgBaseline = 'bba8b52f6dea74159bba855ef00376e588d6ea0a'
+          if (!(Test-Path '3rdparty/vcpkg/scripts/buildsystems/vcpkg.cmake')) {
+            Invoke-Retry -Attempts 5 -Command { git clone https://github.com/microsoft/vcpkg.git 3rdparty/vcpkg }
+          }
+
+          Invoke-Retry -Attempts 5 -Command { git -C 3rdparty/vcpkg fetch origin $vcpkgBaseline }
+          git -C 3rdparty/vcpkg checkout --force $vcpkgBaseline
+          Invoke-Retry -Attempts 3 -Command { & .\3rdparty\vcpkg\bootstrap-vcpkg.bat -disableMetrics }
+
+      - name: Build
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          .\build-windows.ps1 `
+            -Configuration Release `
+            -EmbeddedFrontend ON `
+            -VcpkgTriplet x64-windows
+
+      - name: Package app
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $exe = Get-ChildItem -Path build -Filter meander.exe -Recurse |
+            Where-Object { $_.FullName -match '\\Release\\' } |
+            Select-Object -First 1
+
+          if (-not $exe) {
+            throw 'Could not locate meander.exe in build output.'
+          }
+
+          $staging = "meander-windows-${{ inputs.tag }}"
+          if (Test-Path $staging) {
+            Remove-Item -Recurse -Force $staging
+          }
+          New-Item -ItemType Directory -Path $staging | Out-Null
+
+          Copy-Item -Path (Join-Path $exe.Directory.FullName '*') -Destination $staging -Recurse -Force
+
+          $asset = "$staging.zip"
+          if (Test-Path $asset) {
+            Remove-Item -Force $asset
+          }
+          Compress-Archive -Path $staging -DestinationPath $asset -CompressionLevel Optimal
+
+          "ASSET=$asset" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $flags = @()
+          if ("${{ inputs.prerelease }}" -eq 'true') {
+            $flags += '--prerelease'
+          }
+          if ("${{ inputs.draft }}" -eq 'true') {
+            $flags += '--draft'
+          }
+
+          gh release create "${{ inputs.tag }}" "${env:ASSET}" `
+            --target "${{ inputs.target_ref }}" `
+            --title "${{ inputs.release_name }}" `
+            --notes-file RELEASE_NOTES.md `
+            @flags

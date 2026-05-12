@@ -72,6 +72,44 @@ cmake -S . -B build -DMEANDER_USE_EMBEDDED_FRONTEND=ON
 cmake --build build --target meander --config Release
 ```
 
+## Build on Windows
+
+From the repository root in **PowerShell**:
+
+```powershell
+.\build-windows.ps1 -Configuration Release -EmbeddedFrontend ON -VcpkgTriplet x64-windows
+```
+
+### Windows build options
+
+- `-Configuration`: `Debug`, `Release`, `RelWithDebInfo`, or `MinSizeRel` (default: `Release`)
+- `-EmbeddedFrontend`: `ON` or `OFF` (default: `ON`)
+- `-VcpkgTriplet`: `x64-windows` or `x64-windows-static` (default: `x64-windows`)
+- `-Generator`: CMake generator (default: `Visual Studio 17 2022`)
+- `-Architecture`: `x64` or `Win32` (default: `x64`)
+
+### Example: Debug build with dev server
+
+```powershell
+.\build-windows.ps1 -Configuration Debug -EmbeddedFrontend OFF -VcpkgTriplet x64-windows
+```
+
+**Note:** vcpkg must be bootstrapped at `3rdparty/vcpkg` before running the build script (this is done automatically by the CI workflow).
+
+### PowerShell execution policy
+
+If you get an execution policy error:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build-windows.ps1 -Configuration Release -EmbeddedFrontend ON -VcpkgTriplet x64-windows
+```
+
+Or set it for the session:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+```
+
 ## Run tests
 
 Run each project's test suite from the repository root:
@@ -130,12 +168,24 @@ npm test
 
 Build artifacts are generated under `build/`.
 
-On macOS, the app bundle is produced under `build/meander/<CONFIG>/`.
+### macOS
+
+The app bundle is produced under `build/meander/<CONFIG>/`.
 
 For example, a `Debug` build produces:
 
 ```text
 build/meander/Debug/meander.app
+```
+
+### Windows
+
+The executable is produced under `build/<CONFIG>/`.
+
+For example, a `Release` build produces:
+
+```text
+build/Release/meander.exe
 ```
 
 ## Rebuild from scratch

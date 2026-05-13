@@ -114,10 +114,15 @@ jobs:
             -VcpkgTriplet $env:VCPKG_TARGET_TRIPLET
 
       - name: Package app
-        if: ${{ github.event_name == 'workflow_dispatch' }}
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
+
+          if ($env:GITHUB_EVENT_NAME -eq 'workflow_dispatch') {
+            $packageTag = '${{ inputs.tag }}'
+          } else {
+            $packageTag = $env:GITHUB_SHA.Substring(0, 7)
+          }
 
           $exe = Get-ChildItem -Path build -Filter meander.exe -Recurse |
             Where-Object { $_.FullName -match '\\Release\\' } |
@@ -127,7 +132,7 @@ jobs:
             throw 'Could not locate meander.exe in build output.'
           }
 
-          $staging = "meander-windows-${{ inputs.tag }}"
+          $staging = "meander-windows-$packageTag"
           if (Test-Path $staging) {
             Remove-Item -Recurse -Force $staging
           }

@@ -1,6 +1,8 @@
 name: Release Meander Windows
 
 on:
+  push:
+    branches: [ci/windows]
   workflow_dispatch:
     inputs:
       tag:
@@ -32,6 +34,7 @@ jobs:
     runs-on: windows-latest
     environment: release
     env:
+      VCPKG_TARGET_TRIPLET: x64-windows-static
       VCPKG_FEATURE_FLAGS: manifests,binarycaching
       VCPKG_BINARY_SOURCES: clear;x-gha,readwrite;files,${{ github.workspace }}\.cache\vcpkg\binary,readwrite
       VCPKG_DOWNLOADS: ${{ github.workspace }}\.cache\vcpkg\downloads
@@ -40,7 +43,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.target_ref }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.target_ref || github.sha }}
           submodules: false
 
       - name: Setup Node.js
@@ -63,8 +66,9 @@ jobs:
           path: |
             .cache/vcpkg/binary
             .cache/vcpkg/downloads
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('3rdparty/vcpkg.json', '3rdparty/vcpkg-triplets/*.cmake') }}
+          key: ${{ runner.os }}-vcpkg-${{ env.VCPKG_TARGET_TRIPLET }}-${{ hashFiles('3rdparty/vcpkg.json', '3rdparty/vcpkg-triplets/*.cmake') }}
           restore-keys: |
+            ${{ runner.os }}-vcpkg-${{ env.VCPKG_TARGET_TRIPLET }}-
             ${{ runner.os }}-vcpkg-
 
       - name: Setup vcpkg
@@ -108,9 +112,10 @@ jobs:
           .\build-windows.ps1 `
             -Configuration Release `
             -EmbeddedFrontend ON `
-            -VcpkgTriplet x64-windows
+            -VcpkgTriplet $env:VCPKG_TARGET_TRIPLET
 
       - name: Package app
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -140,6 +145,7 @@ jobs:
           "ASSET=$asset" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Create release
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh

@@ -76,17 +76,31 @@ cmake --build build --target meander --config Release
 
 From the repository root in **PowerShell**:
 
+If your machine blocks local PowerShell scripts, use the `-ExecutionPolicy Bypass` form shown below in the PowerShell notes.
+
 ```powershell
-.\build-windows.ps1 -Configuration Release -EmbeddedFrontend ON -VcpkgTriplet x64-windows
+.\build-windows.ps1 -Configuration Release -EmbeddedFrontend ON -VcpkgTriplet x64-windows-static
+```
+
+For a clean build:
+
+```powershell
+Remove-Item -Recurse -Force .\build -ErrorAction SilentlyContinue
+powershell -ExecutionPolicy Bypass -File .\build-windows.ps1 -Configuration Release -EmbeddedFrontend ON -VcpkgTriplet x64-windows-static
+```
+
+For a **static build** (single executable with no DLL dependencies):
+
+```powershell
+Remove-Item -Recurse -Force .\build, .\.cache -ErrorAction SilentlyContinue
+powershell -ExecutionPolicy Bypass -File .\build-windows.ps1 -Configuration Release -EmbeddedFrontend ON -VcpkgTriplet x64-windows-static
 ```
 
 ### Windows build options
 
 - `-Configuration`: `Debug`, `Release`, `RelWithDebInfo`, or `MinSizeRel` (default: `Release`)
 - `-EmbeddedFrontend`: `ON` or `OFF` (default: `ON`)
-- `-VcpkgTriplet`: `x64-windows` or `x64-windows-static` (default: `x64-windows`)
-- `-Generator`: CMake generator (default: `Visual Studio 17 2022`)
-- `-Architecture`: `x64` or `Win32` (default: `x64`)
+- `-VcpkgTriplet`: `x64-windows-static` (static libraries, no DLL dependencies) or `x64-windows` (dynamic libraries) (default: `x64-windows-static`)
 
 ### Example: Debug build with dev server
 
@@ -94,7 +108,7 @@ From the repository root in **PowerShell**:
 .\build-windows.ps1 -Configuration Debug -EmbeddedFrontend OFF -VcpkgTriplet x64-windows
 ```
 
-**Note:** vcpkg must be bootstrapped at `3rdparty/vcpkg` before running the build script (this is done automatically by the CI workflow).
+**Note:** if `3rdparty/vcpkg` is missing, the Windows build script will clone the pinned `vcpkg` baseline and bootstrap it automatically. This requires `git` to be available on `PATH`.
 
 ### PowerShell execution policy
 
@@ -109,6 +123,12 @@ Or set it for the session:
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 ```
+
+### PowerShell and npm
+
+The Windows build script invokes `npm.cmd` directly. This avoids a known issue with the PowerShell `npm.ps1` wrapper under `Set-StrictMode -Version Latest`, which can fail with an error like `The property 'Statement' cannot be found on this object`.
+
+If you run npm commands manually in the same PowerShell environment and hit that error, use `npm.cmd` instead of `npm`.
 
 ## Run tests
 

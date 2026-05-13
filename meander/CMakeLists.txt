@@ -95,6 +95,11 @@ if(MEANDER_USE_EMBEDDED_FRONTEND)
   target_compile_definitions(${PROJECT_NAME} PRIVATE USE_SAUCER_EMBEDDED)
 endif()
 
+# Define Windows version for compatibility
+if(WIN32)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE _WIN32_WINNT=0x0A00)  # Target Windows 10+
+endif()
+
 if (APPLE)
   set(PLATFORM_LIBS )
 else()

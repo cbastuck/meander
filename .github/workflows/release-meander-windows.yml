@@ -149,7 +149,7 @@ jobs:
           "ASSET=$asset" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Create release
-        if: ${{ github.event_name == 'workflow_dispatch' }}
+        if: ${{ github.event_name == 'workflow_dispatch' || github.ref_name == 'ci/windows' }}
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
@@ -157,15 +157,29 @@ jobs:
           $ErrorActionPreference = 'Stop'
 
           $flags = @()
-          if ("${{ inputs.prerelease }}" -eq 'true') {
-            $flags += '--prerelease'
-          }
-          if ("${{ inputs.draft }}" -eq 'true') {
-            $flags += '--draft'
-          }
+          if ($env:GITHUB_EVENT_NAME -eq 'workflow_dispatch') {
+            if ("${{ inputs.prerelease }}" -eq 'true') {
+              $flags += '--prerelease'
+            }
+            if ("${{ inputs.draft }}" -eq 'true') {
+              $flags += '--draft'
+            }
 
-          gh release create "${{ inputs.tag }}" "${env:ASSET}" `
-            --target "${{ inputs.target_ref }}" `
-            --title "${{ inputs.release_name }}" `
-            --notes-file RELEASE_NOTES.md `
-            @flags
+            gh release create "${{ inputs.tag }}" "${env:ASSET}" `
+              --target "${{ inputs.target_ref }}" `
+              --title "${{ inputs.release_name }}" `
+              --notes-file RELEASE_NOTES.md `
+              @flags
+          } else {
+            $tag = "ci-windows-$($env:GITHUB_RUN_ID)-$($env:GITHUB_RUN_ATTEMPT)"
+            $title = "CI Windows Validation $($env:GITHUB_SHA.Substring(0, 7))"
+
+            $flags += '--prerelease'
+            $flags += '--draft'
+
+            gh release create $tag "${env:ASSET}" `
+              --target "$env:GITHUB_SHA" `
+              --title $title `
+              --notes "Temporary release from ci/windows push for workflow validation." `
+              @flags
+          }

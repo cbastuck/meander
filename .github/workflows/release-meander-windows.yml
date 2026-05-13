@@ -32,7 +32,6 @@ permissions:
 jobs:
   build-and-release:
     runs-on: windows-latest
-    environment: release
     env:
       VCPKG_TARGET_TRIPLET: x64-windows-static
       VCPKG_FEATURE_FLAGS: manifests,binarycaching

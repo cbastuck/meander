@@ -32,6 +32,36 @@ if [[ "${CONFIG}" == "Debug" || "${CONFIG}" == "debug" ]]; then
     IS_DEBUG_CONFIG="ON"
 fi
 
+if ! command -v pkg-config >/dev/null 2>&1; then
+    echo "ERROR: Missing required tool: pkg-config"
+    echo "Install it with: sudo apt install pkg-config"
+    exit 2
+fi
+
+if ! pkg-config --exists "gtk4 >= 4.12"; then
+    echo "ERROR: Missing required development package: gtk4 >= 4.12"
+    echo "Install it with: sudo apt install libgtk-4-dev"
+    exit 2
+fi
+
+if ! pkg-config --exists "libadwaita-1"; then
+    echo "ERROR: Missing required development package: libadwaita-1"
+    echo "Install it with: sudo apt install libadwaita-1-dev"
+    exit 2
+fi
+
+if ! pkg-config --exists "json-glib-1.0"; then
+    echo "ERROR: Missing required development package: json-glib-1.0"
+    echo "Install it with: sudo apt install libjson-glib-dev"
+    exit 2
+fi
+
+if ! pkg-config --exists "webkitgtk-6.0"; then
+    echo "ERROR: Missing required development package: webkitgtk-6.0"
+    echo "Install it with: sudo apt install libwebkitgtk-6.0-dev"
+    exit 2
+fi
+
 # Detect Linux architecture and set appropriate vcpkg triplet
 LINUX_ARCHITECTURE="$(uname -m)"
 if [[ "${LINUX_ARCHITECTURE}" == "aarch64" ]]; then

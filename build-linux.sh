@@ -38,6 +38,12 @@ if ! command -v pkg-config >/dev/null 2>&1; then
     exit 2
 fi
 
+if ! command -v nasm >/dev/null 2>&1; then
+    echo "ERROR: Missing required tool: nasm"
+    echo "Install it with: sudo apt install nasm"
+    exit 2
+fi
+
 if ! pkg-config --exists "gtk4 >= 4.12"; then
     echo "ERROR: Missing required development package: gtk4 >= 4.12"
     echo "Install it with: sudo apt install libgtk-4-dev"

@@ -45,6 +45,7 @@ jobs:
             build-essential \
             gcc-14 \
             g++-14 \
+            nasm \
             ninja-build \
             pkg-config \
             libgtk-4-dev \

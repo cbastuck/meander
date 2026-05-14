@@ -114,13 +114,17 @@ jobs:
             -VcpkgTriplet $env:VCPKG_TARGET_TRIPLET
 
       - name: Sign executable (optional)
-        if: ${{ secrets.WINDOWS_SIGNING_CERT_BASE64 != '' && secrets.WINDOWS_SIGNING_CERT_PASSWORD != '' }}
         env:
           WINDOWS_SIGNING_CERT_BASE64: ${{ secrets.WINDOWS_SIGNING_CERT_BASE64 }}
           WINDOWS_SIGNING_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGNING_CERT_PASSWORD }}
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
+
+          if (-not $env:WINDOWS_SIGNING_CERT_BASE64 -or -not $env:WINDOWS_SIGNING_CERT_PASSWORD) {
+            Write-Host '==> Skipping signing: WINDOWS_SIGNING_CERT_BASE64 or WINDOWS_SIGNING_CERT_PASSWORD secret not configured.'
+            exit 0
+          }
 
           $exe = Get-ChildItem -Path build -Filter meander.exe -Recurse |
             Where-Object { $_.FullName -match '\\Release\\' } |

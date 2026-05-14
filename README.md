@@ -81,7 +81,13 @@ Default configuration is `Release`.
 On Linux, if the default compiler is too old for dependencies, build with GCC 14:
 
 ```bash
-CC=gcc-14 CXX=g++-14 ./build-linux.sh Debug OFF
+CC=gcc-14 CXX=g++-14 ./build-linux.sh
+```
+
+Debug example (keeps symbols and produces much larger binaries):
+
+```bash
+CC=gcc-14 CXX=g++-14 ./build-linux.sh Debug ON
 ```
 
 ### Linux runtime troubleshooting

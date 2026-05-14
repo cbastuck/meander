@@ -113,6 +113,28 @@ jobs:
             -EmbeddedFrontend ON `
             -VcpkgTriplet $env:VCPKG_TARGET_TRIPLET
 
+      - name: Sign executable (optional)
+        if: ${{ secrets.WINDOWS_SIGNING_CERT_BASE64 != '' && secrets.WINDOWS_SIGNING_CERT_PASSWORD != '' }}
+        env:
+          WINDOWS_SIGNING_CERT_BASE64: ${{ secrets.WINDOWS_SIGNING_CERT_BASE64 }}
+          WINDOWS_SIGNING_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGNING_CERT_PASSWORD }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $exe = Get-ChildItem -Path build -Filter meander.exe -Recurse |
+            Where-Object { $_.FullName -match '\\Release\\' } |
+            Select-Object -First 1
+
+          if (-not $exe) {
+            throw 'Could not locate meander.exe in build output for signing.'
+          }
+
+          .\scripts\sign-windows.ps1 `
+            -TargetPath $exe.FullName `
+            -CertBase64 $env:WINDOWS_SIGNING_CERT_BASE64 `
+            -CertPassword $env:WINDOWS_SIGNING_CERT_PASSWORD
+
       - name: Package app
         shell: pwsh
         run: |

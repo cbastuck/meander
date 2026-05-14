@@ -92,9 +92,28 @@ if [[ -z "${VCPKG_FEATURE_FLAGS:-}" ]]; then
 fi
 
 if [[ ! -f "${TOOLCHAIN}" ]]; then
-    echo "ERROR: Missing vcpkg toolchain file: ${TOOLCHAIN}"
-    echo "Ensure vcpkg is initialized at 3rdparty/vcpkg before running build-linux.sh"
-    exit 2
+    echo "==> vcpkg not found, bootstrapping..."
+
+    retry() {
+        local attempts="$1"
+        shift
+        local n=1
+        until "$@"; do
+            if [[ "${n}" -ge "${attempts}" ]]; then
+                return 1
+            fi
+            n=$((n + 1))
+            sleep $((n * 2))
+        done
+    }
+
+    vcpkg_baseline="bba8b52f6dea74159bba855ef00376e588d6ea0a"
+    if [[ ! -f "${REPO_ROOT}/3rdparty/vcpkg/scripts/buildsystems/vcpkg.cmake" ]]; then
+        retry 5 git clone https://github.com/microsoft/vcpkg.git "${REPO_ROOT}/3rdparty/vcpkg"
+    fi
+    retry 5 git -C "${REPO_ROOT}/3rdparty/vcpkg" fetch origin "${vcpkg_baseline}"
+    git -C "${REPO_ROOT}/3rdparty/vcpkg" checkout --force "${vcpkg_baseline}"
+    retry 3 "${REPO_ROOT}/3rdparty/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
 fi
 
 if [[ ! -f "${VCPKG_MANIFEST_DIR}/vcpkg.json" ]]; then

@@ -106,6 +106,9 @@ echo "==> Building meander (config: ${CONFIG})"
 echo "    repo: ${REPO_ROOT}"
 echo "    build: ${BUILD_DIR}"
 echo "    architecture: ${LINUX_ARCHITECTURE}"
+if [[ "${IS_DEBUG_CONFIG}" == "ON" ]]; then
+    echo "    note: Debug build keeps symbols and skips stripping by design"
+fi
 
 mkdir -p "${VCPKG_BINARY_CACHE_DIR}" "${VCPKG_DOWNLOADS_DIR}"
 
@@ -176,6 +179,18 @@ CMAKE_ARGS=(
     -GNinja
 )
 
+if [[ "${IS_DEBUG_CONFIG}" != "ON" ]]; then
+    # Ensure non-Debug binaries do not carry debug symbols.
+    CMAKE_ARGS+=(
+        "-DCMAKE_C_FLAGS_RELEASE=-O3 -DNDEBUG -g0"
+        "-DCMAKE_CXX_FLAGS_RELEASE=-O3 -DNDEBUG -g0"
+        "-DCMAKE_C_FLAGS_MINSIZEREL=-Os -DNDEBUG -g0"
+        "-DCMAKE_CXX_FLAGS_MINSIZEREL=-Os -DNDEBUG -g0"
+        "-DCMAKE_C_FLAGS_RELWITHDEBINFO=-O2 -DNDEBUG -g0"
+        "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=-O2 -DNDEBUG -g0"
+    )
+fi
+
 if [[ -n "${VCPKG_TARGET_TRIPLET}" ]]; then
     CMAKE_ARGS+=("-DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}")
 fi
@@ -187,5 +202,39 @@ fi
 cmake "${CMAKE_ARGS[@]}"
 
 cmake --build "${BUILD_DIR}" --config "${CONFIG}" --parallel "$(nproc 2>/dev/null || echo 1)"
+
+if [[ "${IS_DEBUG_CONFIG}" != "ON" ]]; then
+    if command -v strip >/dev/null 2>&1; then
+        echo "==> Stripping non-Debug ELF executables"
+        strip_count=0
+        while IFS= read -r -d '' binary; do
+            file_desc="$(file -b "${binary}" 2>/dev/null || true)"
+            if [[ "${file_desc}" == ELF* ]] && [[ "${file_desc}" == *"executable"* ]]; then
+                size_before="$(stat -c%s "${binary}" 2>/dev/null || echo 0)"
+                if strip --strip-unneeded "${binary}"; then
+                    size_after="$(stat -c%s "${binary}" 2>/dev/null || echo 0)"
+                    echo "    stripped: ${binary} (${size_before} -> ${size_after} bytes)"
+                    strip_count=$((strip_count + 1))
+                else
+                    echo "WARNING: Failed to strip ${binary}" >&2
+                fi
+            fi
+        done < <(find "${BUILD_DIR}" -type f -print0)
+
+        if [[ "${strip_count}" -eq 0 ]]; then
+            echo "WARNING: No ELF executables were stripped under ${BUILD_DIR}." >&2
+        fi
+
+        if [[ -f "${BUILD_DIR}/meander/meander" ]]; then
+            echo "==> Final meander binary info"
+            ls -lh "${BUILD_DIR}/meander/meander"
+            file "${BUILD_DIR}/meander/meander"
+        fi
+    else
+        echo "WARNING: strip tool not found; non-Debug binaries may still include symbols."
+    fi
+else
+    echo "==> Skipping strip for Debug build"
+fi
 
 echo "==> Done: ${BUILD_DIR}"

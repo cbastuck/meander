@@ -1,8 +1,6 @@
 name: Release Meander Linux
 
 on:
-  push:
-    branches: [ci/linux]
   workflow_dispatch:
     inputs:
       tag:

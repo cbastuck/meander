@@ -2,7 +2,7 @@ name: Build Meander Linux
 
 on:
   push:
-    branches: [main, ci/linux]
+    branches: [main]
   workflow_dispatch:
 
 jobs:

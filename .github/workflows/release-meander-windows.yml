@@ -1,8 +1,6 @@
 name: Release Meander Windows
 
 on:
-  push:
-    branches: [ci/linux]
   workflow_dispatch:
     inputs:
       tag:

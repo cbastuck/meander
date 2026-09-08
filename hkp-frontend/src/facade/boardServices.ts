@@ -20,7 +20,9 @@ export function findService(
   boardContext: BoardContextState,
   uuid: string,
 ): ServiceInstance | null {
-  // Browser runtime scopes expose findServiceInstance
+  // Only browser scopes expose findServiceInstance — a browser service is a
+  // live object in this process, so a hit hands back the real instance. Remote
+  // runtime engines have no such function, and fall through to the proxy below.
   for (const scope of Object.values(boardContext.scopes)) {
     const svc = (scope as any).findServiceInstance?.(uuid)?.[0];
     if (svc) {
@@ -75,6 +77,11 @@ export function processService(
   uuid: string,
   payload: unknown,
 ): void {
+  // Which runtime holds the service is not asked, it is discovered: only a
+  // browser scope implements findServiceInstance, because only there is the
+  // service a live object in this process. A hit therefore means "local", and
+  // the work is a direct call. Remote runtime engines expose no such function,
+  // so their services fall through to the request below.
   for (const scope of Object.values(boardContext.scopes)) {
     const svc = (scope as any).findServiceInstance?.(uuid)?.[0];
     if (svc) {
@@ -84,6 +91,7 @@ export function processService(
     }
   }
 
+  // No scope claimed the uuid: the service lives on a remote runtime.
   for (const [runtimeId, svcs] of Object.entries(boardContext.services)) {
     if (!svcs.find((s) => s.uuid === uuid)) {
       continue;

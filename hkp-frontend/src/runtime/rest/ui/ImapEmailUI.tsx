@@ -23,20 +23,40 @@ export default function ImapEmailUI(props: ServiceUIProps) {
   const [error, setError] = useState("");
 
   const onUpdate = useCallback((state: any) => {
-    if (state.host !== undefined) setHost(state.host);
-    if (state.port !== undefined) setPort(String(state.port));
-    if (state.username !== undefined) setUsername(state.username);
-    if (state.password !== undefined) setPassword(state.password);
+    if (state.host !== undefined) {
+      setHost(state.host);
+    }
+    if (state.port !== undefined) {
+      setPort(String(state.port));
+    }
+    if (state.username !== undefined) {
+      setUsername(state.username);
+    }
+    if (state.password !== undefined) {
+      setPassword(state.password);
+    }
 
-    if (state.tls !== undefined) setTls(state.tls);
-    if (state.mailbox !== undefined) setMailbox(state.mailbox);
-    if (state.enabled !== undefined) setEnabled(state.enabled);
-    if (state.running !== undefined) setRunning(state.running);
-    if (state.status !== undefined) setStatus(state.status);
+    if (state.tls !== undefined) {
+      setTls(state.tls);
+    }
+    if (state.mailbox !== undefined) {
+      setMailbox(state.mailbox);
+    }
+    if (state.enabled !== undefined) {
+      setEnabled(state.enabled);
+    }
+    if (state.running !== undefined) {
+      setRunning(state.running);
+    }
+    if (state.status !== undefined) {
+      setStatus(state.status);
+    }
     if (state.reconnectAttempts !== undefined) {
       setAttempts(state.reconnectAttempts);
     }
-    if (state.error !== undefined) setError(state.error);
+    if (state.error !== undefined) {
+      setError(state.error);
+    }
   }, []);
 
   const configure = (patch: Record<string, unknown>) => {
@@ -66,7 +86,9 @@ export default function ImapEmailUI(props: ServiceUIProps) {
           onChange={(v) => {
             setPort(v);
             const n = parseInt(v, 10);
-            if (!isNaN(n)) configure({ port: n });
+            if (!isNaN(n)) {
+              configure({ port: n });
+            }
           }}
         />
 

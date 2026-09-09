@@ -97,18 +97,15 @@ platform's prerequisites.
 
 ## Testing
 
-`run-all-tests.sh` at the root runs six suites in order — hkp-python, hkp-node,
-hkp-rt, the desktop backend, the frontend's demo-board regression, and the rest
-of the frontend — and prints a pass/fail table rather than stopping at the first
-failure, so one run tells you everything that is broken.
+`run-all-tests.sh` at the root runs every area's suite in one go, and `e2e/`
+drives the assembled app in a real browser. **CI is narrower than either**:
+`.github/workflows/run-all-tests.yml` checks out with `submodules: false` and
+runs hkp-rt and hkp-frontend only.
 
-**CI is narrower than that.** `.github/workflows/run-all-tests.yml` checks out
-with `submodules: false` and runs hkp-rt and hkp-frontend only. That is not an
-oversight, it is the same split again: the submodules answer for themselves, and
-a superproject workflow that cloned them would be testing somebody else's commit.
-It does mean a change to hkp-node or hkp-python is covered by *its* repository's
-tests and by whoever runs the script locally — worth remembering before relying
-on a green tick here.
+That is not an oversight, it is this same split again — the submodules answer
+for themselves, and a superproject workflow that cloned them would be testing
+whichever commit they happened to be on. What that means in practice is in
+`testing.md`.
 
 ---
 

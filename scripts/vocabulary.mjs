@@ -95,11 +95,13 @@ function readEntries(markdown) {
  * — relative to `docs/content`, which is what makes the same spelling work in a
  * checkout and on the website. Everything else is a path from the repo root.
  */
-const DOCS_RELATIVE = /^(concepts\/|services\/|repository\.md$|vocabulary\.md$)/;
-
 function resolveReference(file) {
-  if (DOCS_RELATIVE.test(file)) {
-    return path.join(ROOT, "docs/content", file);
+  // A page under docs/content, named the way the documents name each other.
+  // Asked as a question about the file rather than kept as a list of them, so a
+  // new page needs no edit here.
+  const inDocs = path.join(ROOT, "docs/content", file);
+  if (fs.existsSync(inDocs)) {
+    return inDocs;
   }
   return path.join(ROOT, file);
 }

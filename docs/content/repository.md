@@ -121,6 +121,17 @@ both sides of the boundary and a diff from the superproject alone reports
 Anything else that walks the tree — a search, a release script, a review — has
 the same problem, and the same answer: iterate the list in `.gitmodules`.
 
+Guarding an invariant that spans the boundary costs the same. The app version is
+stated twice — `version` in `hkp-frontend/package.json`, which the superproject
+holds, and `APP_VERSION_STRING` in `hkp-website/src/pages/constants.ts`, which
+the website submodule holds — so a commit on either side alone can break the
+pair, and a hook in one repository would never see the other's commit.
+`scripts/check-version-sync.mjs` compares the two working trees and takes
+`package.json` as the source of truth (`--fix` rewrites the website string).
+`.githooks/pre-commit` runs it, and `scripts/install-hooks.sh` points
+`core.hooksPath` at that directory in **both** repositories — hooks are not
+carried by a clone, so this is a step each checkout takes once.
+
 ---
 
 ## Rough index into the source

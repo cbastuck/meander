@@ -136,7 +136,7 @@ is the one worth being pedantic in.
 
 | Term | What it is | Where it lives |
 |---|---|---|
-| **Superproject** | The outer repository, holding what is built and released together — the frontend, the C++ runtime, the desktop app, these docs. → `concepts/repository.md` | `CMakeLists.txt`, `run-all-tests.sh` |
+| **Superproject** | The outer repository, holding what is built and released together — the frontend, the C++ runtime, the desktop app, these docs. → `repository.md` | `CMakeLists.txt`, `run-all-tests.sh` |
 | **Submodule** | One of the five directories with a history and a release of its own: hkp-node, hkp-python, hkp-website, meander-ios, meander-android. A change spanning one and the superproject is two commits. | `.gitmodules`, `scripts/vocabulary.mjs` |
 
 ---

@@ -95,8 +95,10 @@ function readEntries(markdown) {
  * — relative to `docs/content`, which is what makes the same spelling work in a
  * checkout and on the website. Everything else is a path from the repo root.
  */
+const DOCS_RELATIVE = /^(concepts\/|services\/|repository\.md$|vocabulary\.md$)/;
+
 function resolveReference(file) {
-  if (file.startsWith("concepts/") || file.startsWith("services/")) {
+  if (DOCS_RELATIVE.test(file)) {
     return path.join(ROOT, "docs/content", file);
   }
   return path.join(ROOT, file);

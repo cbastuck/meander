@@ -287,6 +287,7 @@ meander-ios/           iOS-specific native layer
 | ----- | ------------- |
 | `docs/content/concepts/` | How the system is put together and why — one page per idea (board, runtime, service, units, mounts, coordinator, cloud boards, logging) |
 | `docs/content/services/` | One page per service |
+| `docs/content/repository.md` | How the checkout is laid out: what is in the superproject, what is a submodule, and what follows from that when committing, building and testing |
 | `docs/content/vocabulary.md` | **The words this project uses about itself, and the file behind each one.** Read it when a term in a request ("the AppMenu", "a mount", "the consent dialog") has to become a file. Finer-grained than the concepts; every concept appears in it |
 
 The vocabulary is written by hand — never add or remove a term on your own

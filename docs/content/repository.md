@@ -26,8 +26,6 @@ committed, so it is worth knowing before the first commit rather than after.
 | `meander-ios/` | **submodule** | SwiftUI shell embedding the mobile playground and an in-process `hkp-rt` |
 | `meander-android/` | **submodule** | Android shell doing the same through a `WebView` |
 
-`hkp-go/` is the Go runtime, in development.
-
 ---
 
 ## Why the split falls where it does
@@ -142,5 +140,5 @@ the same problem, and the same answer: iterate the list in `.gitmodules`.
 ---
 
 See also: **Runtime** (`concepts/runtime.md`) for what each of these parts *is*
-in a running board, and the vocabulary for the word-to-file lookup across all of
-them.
+in a running board, and **Vocabulary** (`vocabulary.md`) for the word-to-file
+lookup across all of them.

@@ -289,6 +289,7 @@ meander-ios/           iOS-specific native layer
 | `docs/content/services/` | One page per service |
 | `docs/content/repository.md` | How the checkout is laid out: what is in the superproject, what is a submodule, and what follows from that when committing, building and testing |
 | `docs/content/testing.md` | What runs where: the per-area suites behind `run-all-tests.sh`, the Playwright suite in `e2e/` across three host profiles, and what CI actually covers |
+| `docs/content/targets.md` | Where a board runs: the web, desktop, iOS and Android targets, what each host adds, which features are compiled in per platform, and what each build produces |
 | `docs/content/vocabulary.md` | **The words this project uses about itself, and the file behind each one.** Read it when a term in a request ("the AppMenu", "a mount", "the consent dialog") has to become a file. Finer-grained than the concepts; every concept appears in it |
 
 The vocabulary is written by hand — never add or remove a term on your own

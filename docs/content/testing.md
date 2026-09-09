@@ -163,7 +163,7 @@ first. `e2e/README.md` covers the ways of watching a run live.
 runs **hkp-rt and hkp-frontend only** — the in-tree parts. That is the repository
 split showing through: the submodules answer for themselves, and a superproject
 workflow that cloned them would be testing whatever commit they happened to be
-on. See `repository.md`.
+on. See [Repository](./repository.md).
 
 So two things are *not* behind the green tick, and both are worth knowing before
 trusting it:
@@ -188,9 +188,10 @@ trusting it:
 | Board drift, without a browser | `hkp-frontend/src/runtime/browser/tests/demo-boards.regression.test.tsx` |
 | Board drift, in a browser | `e2e/tests/smoke/shipped-boards.spec.ts` |
 | What CI covers | `.github/workflows/run-all-tests.yml` |
+| Why CI covers only part of it | [Repository](./repository.md) |
 | Manual checklists for a change | `TODO-TEST.md` |
 
 ---
 
-See also: **Repository** (`repository.md`) for why the split between in-tree and
+See also: [Repository](./repository.md) for why the split between in-tree and
 submodule decides what CI covers.

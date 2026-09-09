@@ -97,15 +97,16 @@ platform's prerequisites.
 
 ## Testing
 
-`run-all-tests.sh` at the root runs every area's suite in one go, and `e2e/`
-drives the assembled app in a real browser. **CI is narrower than either**:
-`.github/workflows/run-all-tests.yml` checks out with `submodules: false` and
-runs hkp-rt and hkp-frontend only.
+`run-all-tests.sh` at the root runs every area's suite in one go; the end-to-end
+suite in `e2e/` is separate, and drives the assembled app in a real browser.
+**CI is narrower than either**: `.github/workflows/run-all-tests.yml` checks out
+with `submodules: false` and runs hkp-rt and hkp-frontend only.
 
 That is not an oversight, it is this same split again — the submodules answer
 for themselves, and a superproject workflow that cloned them would be testing
-whichever commit they happened to be on. What that means in practice is in
-`testing.md`.
+whichever commit they happened to be on. What that means in practice — which
+suite answers which question, and what is left outside the green tick — is in
+[Testing](./testing.md).
 
 ---
 
@@ -144,9 +145,11 @@ carried by a clone, so this is a step each checkout takes once.
 | What CI covers | `.github/workflows/run-all-tests.yml` |
 | Per-platform prerequisites | `README-macos.md`, `README-ios.md`, `README-android.md`, `README-linux.md`, `README-windows.md`, `README-web.md` |
 | Iterating submodules in a script | `scripts/vocabulary.mjs` |
+| What each suite covers, and what CI does not | [Testing](./testing.md) |
 
 ---
 
-See also: **Runtime** (`concepts/runtime.md`) for what each of these parts *is*
-in a running board, and **Vocabulary** (`vocabulary.md`) for the word-to-file
+See also: [Testing](./testing.md) for what runs where and why CI covers only
+part of it, [Runtime](./concepts/runtime.md) for what each of these parts *is*
+in a running board, and [Vocabulary](./vocabulary.md) for the word-to-file
 lookup across all of them.

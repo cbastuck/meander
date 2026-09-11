@@ -4,12 +4,13 @@ import { useAppContext } from "../../AppContext";
 import {
   CloudBoard,
   CloudBoardSummary,
+  deleteCloudBoard,
   getCloudBoard,
   listCloudBoards,
   unshareCloudBoard,
   upsertCloudBoard,
 } from "../../cloud/boardStorage";
-import { localStoragePrefix } from "../playground/common";
+import { getLocalBoard, localStoragePrefix } from "../playground/common";
 import { BoardNode, FolderNode } from "./types";
 
 /**
@@ -45,6 +46,34 @@ function markSeenVersion(id: string, updatedAt: string) {
   );
 }
 
+/**
+ * The board document inside a stored record.
+ *
+ * A record holds the board itself, but boards uploaded before that was true
+ * hold the local-storage envelope ({source, createdAt, description}) instead —
+ * unwrapped here rather than left to open as an empty board. The record's name
+ * is what the finder lists the board under, so that is what the document is
+ * named: a document disagreeing would open under one name and upload back
+ * under another, as a second board.
+ */
+function boardDocument(board: CloudBoard): Record<string, unknown> {
+  const data = board.data ?? {};
+  const wrapped = typeof data.source === "string" ? data.source : null;
+  if (wrapped) {
+    try {
+      return {
+        ...(JSON.parse(wrapped) as Record<string, unknown>),
+        boardName: board.name,
+      };
+    } catch {
+      // Unparseable source: hand the record over as it is, so whatever else it
+      // carries is still there to look at.
+      return { ...data, boardName: board.name };
+    }
+  }
+  return { ...data, boardName: board.name };
+}
+
 export interface CloudBoardSources {
   /** The "Shared" source folder (With me / From me). */
   sharedSource: FolderNode;
@@ -54,6 +83,9 @@ export interface CloudBoardSources {
   uploadBoardToCloud?: (name: string) => Promise<void>;
   onRevokeShare: (board: BoardNode, email: string) => Promise<void>;
   onLeaveShare: (board: BoardNode) => Promise<void>;
+  /** Deletes one of the user's uploaded boards from the cloud storage, with
+   *  the shares that go with it. The local copy, if any, is untouched. */
+  onDeleteCloudBoard: (board: BoardNode) => Promise<void>;
   /** Fetches a cloud-stored board and marks it seen (clearing the "New" /
    *  "Update available" badge); null while logged out. The host decides how
    *  to open the returned board (share-link encoding, direct descriptor, …). */
@@ -89,19 +121,27 @@ export function useCloudBoardSources(): CloudBoardSources {
     () =>
       user
         ? async (name: string) => {
-            const raw = localStorage.getItem(`${localStoragePrefix}${name}`);
-            if (!raw) {
+            // Saved boards are stored wrapped ({source, createdAt,
+            // description}); what belongs in the cloud is the board inside,
+            // not the envelope around it.
+            const board = getLocalBoard(name) as
+              | Record<string, unknown>
+              | undefined;
+            if (!board) {
               throw new Error("Board not found on this device");
             }
-            const board = JSON.parse(raw) as { description?: string };
+            const { description } = JSON.parse(
+              localStorage.getItem(`${localStoragePrefix}${name}`) ?? "{}",
+            ) as { description?: string };
             await upsertCloudBoard(
               { idToken: user.idToken },
               {
                 name,
-                data: board,
-                metadata: board.description
-                  ? { description: board.description }
-                  : undefined,
+                // Uploaded under the name it is filed as, so it opens under
+                // that name and a re-upload updates this record rather than
+                // creating a second one.
+                data: { ...board, boardName: name },
+                metadata: description ? { description } : undefined,
               },
             );
             // The board should show up under My Boards → Uploaded right away.
@@ -230,6 +270,17 @@ export function useCloudBoardSources(): CloudBoardSources {
     [user, refreshCloudBoards],
   );
 
+  const onDeleteCloudBoard = useCallback(
+    async (board: BoardNode) => {
+      if (!user || !board.cloudId) {
+        return;
+      }
+      await deleteCloudBoard({ idToken: user.idToken }, board.cloudId);
+      await refreshCloudBoards();
+    },
+    [user, refreshCloudBoards],
+  );
+
   const openCloudStored = useCallback(
     async (action: { id: string; name: string }): Promise<CloudBoard | null> => {
       if (!user) {
@@ -238,7 +289,7 @@ export function useCloudBoardSources(): CloudBoardSources {
       const board = await getCloudBoard({ idToken: user.idToken }, action.id);
       // Opening clears the "New" / "Update available" badge.
       markSeenVersion(action.id, board.updatedAt);
-      return board;
+      return { ...board, data: boardDocument(board) };
     },
     [user],
   );
@@ -249,6 +300,7 @@ export function useCloudBoardSources(): CloudBoardSources {
     uploadBoardToCloud,
     onRevokeShare,
     onLeaveShare,
+    onDeleteCloudBoard,
     openCloudStored,
   };
 }

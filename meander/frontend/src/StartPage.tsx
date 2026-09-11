@@ -67,6 +67,7 @@ export default function StartPage({ onRestoreBoard }: Props) {
     uploadBoardToCloud,
     onRevokeShare,
     onLeaveShare,
+    onDeleteCloudBoard,
     openCloudStored,
   } = useCloudBoardSources({ loadBoard: loadBoardForUpload });
 
@@ -339,6 +340,7 @@ export default function StartPage({ onRestoreBoard }: Props) {
       myBoardsExtraFolders={uploadedFolders}
       onRevokeShare={onRevokeShare}
       onLeaveShare={onLeaveShare}
+      onDeleteCloudBoard={onDeleteCloudBoard}
       manageRemotes={remotes}
       withCloudBoards
       uploadBoardArt={uploadBoardArt}

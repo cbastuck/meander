@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Collect third-party license information for the native and mobile Readymade builds.
+"""Collect third-party license information for everything Readymade distributes.
 
 Walks the four places a dependency can enter a build:
 
   vcpkg     3rdparty/vcpkg/installed/<triplet>/share/<pkg>/copyright
   cmake     <build-tree>/_deps/<name>-src  (CPM + FetchContent, incl. transitive)
   vendored  source copied into 3rdparty/ (crow, yas, mdns, inflect)
-  npm       the production closure of the frontends embedded into every app bundle
+  npm       the production closure of each frontend and of the website
 
 and writes THIRD-PARTY-NOTICES.md plus a licenses/ tree of verbatim license texts laid
 out by what needs each component rather than by where it came from:
@@ -16,7 +16,8 @@ out by what needs each component rather than by where it came from:
                                   need is written into both folders
   licenses/runtime-core/          the runtime itself: HTTP, serialization, discovery, auth
   licenses/app-shell/             the desktop application around the runtime
-  licenses/frontend/              the embedded web app
+  licenses/frontend/              the web app embedded in every app bundle
+  licenses/website/               readymadeit.com's bundle, served to browsers only
   licenses/build-only/            runs during the build, never linked into an artifact
   licenses/not-shipped/           present in a dependency store, linked by nothing
 
@@ -39,6 +40,7 @@ which is what CI should run.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import shutil
@@ -46,6 +48,7 @@ import subprocess
 import sys
 import tempfile
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -63,8 +66,9 @@ CORE = ["runtime-core"]        # the runtime itself: HTTP, serialization, discov
 SHELL = ["app-shell"]          # the desktop application shell around the runtime
 TOOLING = ["build-only"]       # runs during the build, never linked into an artifact
 UNUSED = ["not-shipped"]       # present in a dependency store but linked by nothing
-FRONTEND = ["frontend"]        # the embedded web app
-BUCKETS = set(CORE + SHELL + TOOLING + UNUSED + FRONTEND)
+FRONTEND = ["frontend"]        # the web app embedded in every app bundle
+WEBSITE = ["website"]          # readymadeit.com's own bundle, served to browsers only
+BUCKETS = set(CORE + SHELL + TOOLING + UNUSED + FRONTEND + WEBSITE)
 
 # The two speech services share one static library each, so a component reached through
 # sherpa-onnx or the inflect backend is scoped to both.
@@ -355,10 +359,18 @@ VENDORED_PATHS = {
 # rather than under licenses/, so licenses/ is entirely generated and safe to wipe.
 MANUAL_TEXTS = Path(__file__).resolve().parent / "license-texts"
 
-# The frontends whose production npm closure is embedded into the app bundles.
+# The npm projects whose production closure reaches a user, and where it reaches them.
+# hkp-frontend and readymade-frontend are embedded into the app bundles; hkp-website is
+# served to browsers and never shipped inside an app. A package in more than one closure
+# takes both scopes, because it is genuinely distributed on both paths.
+#
+# hkp-website's bundle is a superset of its own manifest: its Vite config aliases
+# `hkp-frontend/src`, so the playground it serves drags hkp-frontend's closure into the
+# browser too. That is why the website's licence page has to show both scopes.
 NPM_ROOTS = {
-    "hkp-frontend": "hkp-frontend",
-    "readymade-frontend": "meander/frontend",
+    "hkp-frontend": {"path": "hkp-frontend", "scope": FRONTEND},
+    "readymade-frontend": {"path": "meander/frontend", "scope": FRONTEND},
+    "hkp-website": {"path": "hkp-website", "scope": WEBSITE},
 }
 
 LICENSE_FILE_RE = re.compile(r"^(LICEN[CS]E|COPYING|NOTICE|UNLICENSE)", re.IGNORECASE)
@@ -468,6 +480,9 @@ class Found:
     # often a fork rather than the upstream project named in the registry.
     fetch_url: str = ""
     spdx: str = ""
+    # npm entries carry their own scope, accumulated across the closures they appear in;
+    # native components take theirs from the REGISTRY instead.
+    scopes: list[str] = field(default_factory=list)
 
 
 def read_text(path: Path) -> str:
@@ -609,9 +624,10 @@ def vendored_version(repo: Path, name: str) -> str:
 
 
 def discover_npm(repo: Path) -> dict[str, Found]:
-    """The production closure of each embedded frontend, read from its lockfile."""
+    """The production closure of each npm project, read from its lockfile."""
     found: dict[str, Found] = {}
-    for label, rel in NPM_ROOTS.items():
+    for label, root in NPM_ROOTS.items():
+        rel = root["path"]
         lock = repo / rel / "package-lock.json"
         if not lock.is_file():
             continue
@@ -619,16 +635,25 @@ def discover_npm(repo: Path) -> dict[str, Found]:
         for key, meta in data.get("packages", {}).items():
             if not key or meta.get("dev"):
                 continue
-            # Optional dependencies constrained to an os/cpu other than this machine's are
-            # not installed and cannot be in the bundle — they are prebuilt Node-native
-            # binaries, which a browser bundle never contains on any platform.
-            if meta.get("optional") and not (repo / rel / key).is_dir():
+            # Packages the lockfile constrains to an os/cpu are prebuilt Node-native
+            # binaries (fsevents, the @cbor-extract/* set). A browser bundle never
+            # contains one on any platform, and these frontends are browser bundles even
+            # when embedded in an app. Skip them on the declaration, not on whether they
+            # happen to be installed here: npm installs only the ones matching the current
+            # machine, so testing the directory would make the output depend on who ran
+            # the generator and turn --check into a false alarm on a different platform.
+            if meta.get("os") or meta.get("cpu"):
                 continue
             pkg_name = key.split("node_modules/")[-1]
             version = meta.get("version", "")
             ident = f"{pkg_name}@{version}" if version else pkg_name
             entry = found.setdefault(ident, Found(name=pkg_name, group="npm", version=version))
             entry.seen_in.add(label)
+            # A package in two closures is distributed on both paths, so it takes both
+            # scopes and its text is written into both folders.
+            for scope in root["scope"]:
+                if scope not in entry.scopes:
+                    entry.scopes.append(scope)
             if not entry.license_paths:
                 pkg_dir = repo / rel / key
                 entry.license_paths = license_files(pkg_dir, [])
@@ -824,13 +849,21 @@ def render(found: dict[str, dict[str, Found]], written: dict[str, list[str]]) ->
         add("## Bundled web frontend (npm)")
         add("")
         add(
-            "The desktop, iOS and Android apps all embed the built web frontend, so these packages "
-            "ship inside every app bundle. The list is the production dependency closure of each "
-            "frontend's `package-lock.json`, which is a superset of what the bundler actually emits "
-            "into `dist/` — erring towards over-attribution. Two things are excluded because they "
-            "are never bundled: development-only tooling (Vite, ESLint, test runners), and "
-            "optional prebuilt Node-native binaries for foreign platforms, which are not installed "
-            "and could not enter a browser bundle in any case."
+            "Two distribution paths, and the *Frontend* column says which a package is on. "
+            "`hkp-frontend` and `readymade-frontend` are embedded into the desktop, iOS and "
+            "Android bundles, so those packages ship inside every app. `hkp-website` is served "
+            "to browsers from readymadeit.com and is never inside an app — but because the site "
+            "aliases `hkp-frontend/src` to serve the playground, its browser bundle carries both "
+            "sets. A package on both paths is listed once and attributed under both."
+        )
+        add("")
+        add(
+            "Each list is the production dependency closure of that project's "
+            "`package-lock.json`, a superset of what the bundler actually emits into `dist/` — "
+            "erring towards over-attribution. Two things are excluded because they are never "
+            "bundled: development-only tooling (Vite, ESLint, test runners), and prebuilt "
+            "Node-native binaries, which the lockfile marks with an `os`/`cpu` constraint and "
+            "which no browser bundle contains on any platform."
         )
         add("")
         add(
@@ -901,6 +934,87 @@ def render(found: dict[str, dict[str, Found]], written: dict[str, list[str]]) ->
     )
     add("")
     return "\n".join(lines)
+
+
+# =============================================================================
+# Machine-readable output
+# =============================================================================
+#
+# licenses/index.json feeds the in-app and on-site licence pages. It carries the verbatim
+# texts rather than links to them: attribution means reproducing the licence wherever the
+# code is distributed, and a page that only points at a repository has not done that.
+# Texts are deduplicated by content hash — the same MIT text backs hundreds of packages —
+# which is what keeps the payload small enough to ship.
+
+# Which distribution surfaces exist, and which npm root reaches which. The website serves
+# the playground by aliasing hkp-frontend/src, so anything in that closure is distributed
+# to browsers as well as inside the apps.
+NPM_ROOT_SURFACES = {
+    "hkp-frontend": ["website"] + TARGETS,
+    "readymade-frontend": TARGETS,
+    "hkp-website": ["website"],
+}
+
+
+def surfaces_for(entry: Found, comp: Component | None) -> list[str]:
+    """Every surface whose shipped artifact contains this component."""
+    if entry.group == "npm":
+        out: set[str] = set()
+        for label in entry.seen_in:
+            out.update(NPM_ROOT_SURFACES.get(label, []))
+        return [s for s in ["website"] + TARGETS if s in out]
+    return list(comp.targets) if comp else []
+
+
+def build_index(found: dict[str, dict[str, Found]]) -> dict:
+    """Assemble the JSON: deduplicated texts plus one record per component."""
+    texts: dict[str, str] = {}
+    components: list[dict] = []
+
+    for group in ("vcpkg", "cmake", "vendored", "npm"):
+        for key in sorted(found.get(group, {}), key=str.lower):
+            entry = found[group][key]
+            comp = REGISTRY.get(entry.name if group != "npm" else "")
+            refs = []
+            for path in entry.license_paths:
+                if not path.is_file():
+                    continue
+                body = read_text(path)
+                digest = hashlib.sha256(body.encode("utf-8")).hexdigest()[:16]
+                texts.setdefault(digest, body)
+                refs.append({"file": path.name, "hash": digest})
+
+            record = {
+                "name": entry.name,
+                "version": entry.version,
+                "spdx": (comp.spdx if comp else entry.spdx) or "UNKNOWN",
+                "group": group,
+                "surfaces": surfaces_for(entry, comp),
+                "texts": refs,
+            }
+            if comp:
+                record["url"] = comp.url
+                record["scopes"] = comp.scope
+                if comp.via:
+                    record["via"] = comp.via
+                if comp.notes:
+                    record["notes"] = comp.notes
+            else:
+                record["url"] = f"https://www.npmjs.com/package/{entry.name}"
+                record["scopes"] = entry.scopes
+            components.append(record)
+
+    return {
+        "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "project": {
+            "name": "Readymade",
+            "spdx": "AGPL-3.0-only",
+            "source": "https://github.com/cbastuck/hkp",
+        },
+        "surfaces": ["website"] + TARGETS,
+        "texts": texts,
+        "components": components,
+    }
 
 
 # =============================================================================
@@ -980,7 +1094,7 @@ def main() -> int:
     written: dict[str, list[str]] = {}
     for group, entries in found.items():
         for key, entry in entries.items():
-            scopes = FRONTEND if group == "npm" else REGISTRY[key].scope if key in REGISTRY else []
+            scopes = entry.scopes if group == "npm" else REGISTRY[key].scope if key in REGISTRY else []
             written[f"{group}/{key}"] = copy_licenses(licenses_dir, entry, scopes)
 
     missing = [k for k, v in written.items() if not v and not k.startswith("npm/")]
@@ -989,6 +1103,10 @@ def main() -> int:
 
     notices = out_root / "THIRD-PARTY-NOTICES.md"
     notices.write_text(render(found, written), encoding="utf-8")
+
+    index = licenses_dir / "index.json"
+    index.parent.mkdir(parents=True, exist_ok=True)
+    index.write_text(json.dumps(build_index(found), indent=1, sort_keys=False), encoding="utf-8")
 
     if args.check:
         result = subprocess.run(

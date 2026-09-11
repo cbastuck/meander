@@ -113,18 +113,21 @@ Third-party source copied into the repository under `3rdparty/`.
 
 ## Bundled web frontend (npm)
 
-The desktop, iOS and Android apps all embed the built web frontend, so these packages ship inside every app bundle. The list is the production dependency closure of each frontend's `package-lock.json`, which is a superset of what the bundler actually emits into `dist/` — erring towards over-attribution. Two things are excluded because they are never bundled: development-only tooling (Vite, ESLint, test runners), and optional prebuilt Node-native binaries for foreign platforms, which are not installed and could not enter a browser bundle in any case.
+Two distribution paths, and the *Frontend* column says which a package is on. `hkp-frontend` and `readymade-frontend` are embedded into the desktop, iOS and Android bundles, so those packages ship inside every app. `hkp-website` is served to browsers from readymadeit.com and is never inside an app — but because the site aliases `hkp-frontend/src` to serve the playground, its browser bundle carries both sets. A package on both paths is listed once and attributed under both.
+
+Each list is the production dependency closure of that project's `package-lock.json`, a superset of what the bundler actually emits into `dist/` — erring towards over-attribution. Two things are excluded because they are never bundled: development-only tooling (Vite, ESLint, test runners), and prebuilt Node-native binaries, which the lockfile marks with an `os`/`cpu` constraint and which no browser bundle contains on any platform.
 
 A `—` in the *Text* column means the package ships no licence file of its own; its SPDX identifier as declared in its `package.json` is what the *Licence* column reports, and that declaration is the attribution.
 
 | Package | Version | Licence | Frontend | Text |
 | --- | --- | --- | --- | --- |
 | `@alloc/quick-lru` | 5.2.0 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/alloc_quick-lru/license) |
-| `@auth0/auth0-auth-js` | 1.6.0 | MIT | hkp-frontend | [text](licenses/frontend/auth0_auth0-auth-js/LICENSE) |
+| `@auth0/auth0-auth-js` | 1.6.0 | MIT | hkp-frontend, hkp-website | [text](licenses/frontend/auth0_auth0-auth-js/LICENSE) |
 | `@auth0/auth0-react` | 2.16.1 | MIT | hkp-frontend | [text](licenses/frontend/auth0_auth0-react/LICENSE) |
+| `@auth0/auth0-react` | 2.16.2 | MIT | hkp-website | [text](licenses/website/auth0_auth0-react/LICENSE) |
 | `@auth0/auth0-spa-js` | 2.18.3 | MIT | hkp-frontend | [text](licenses/frontend/auth0_auth0-spa-js/LICENSE) |
+| `@auth0/auth0-spa-js` | 2.19.3 | MIT | hkp-website | [text](licenses/website/auth0_auth0-spa-js/LICENSE) |
 | `@babel/runtime` | 7.29.2 | MIT | hkp-frontend | [text](licenses/frontend/babel_runtime/LICENSE) |
-| `@cbor-extract/cbor-extract-darwin-arm64` | 2.2.0 | MIT | hkp-frontend | — |
 | `@floating-ui/core` | 1.7.5 | MIT | hkp-frontend | [text](licenses/frontend/floating-ui_core/LICENSE) |
 | `@floating-ui/dom` | 1.7.6 | MIT | hkp-frontend | [text](licenses/frontend/floating-ui_dom/LICENSE) |
 | `@floating-ui/react-dom` | 2.1.8 | MIT | hkp-frontend | [text](licenses/frontend/floating-ui_react-dom/LICENSE) |
@@ -190,10 +193,19 @@ A `—` in the *Text* column means the package ships no licence file of its own;
 | `@react-dnd/asap` | 4.0.1 | MIT | hkp-frontend | [text](licenses/frontend/react-dnd_asap/LICENSE.md) |
 | `@react-dnd/invariant` | 2.0.0 | MIT | hkp-frontend | [text](licenses/frontend/react-dnd_invariant/LICENSE) |
 | `@react-dnd/shallowequal` | 2.0.0 | MIT | hkp-frontend | [text](licenses/frontend/react-dnd_shallowequal/LICENSE) |
+| `@types/debug` | 4.1.13 | MIT | hkp-website | [text](licenses/website/types_debug/LICENSE) |
+| `@types/estree-jsx` | 1.0.5 | MIT | hkp-website | [text](licenses/website/types_estree-jsx/LICENSE) |
+| `@types/estree` | 1.0.8 | MIT | hkp-website | [text](licenses/website/types_estree/LICENSE) |
+| `@types/hast` | 3.0.4 | MIT | hkp-website | [text](licenses/website/types_hast/LICENSE) |
+| `@types/mdast` | 4.0.4 | MIT | hkp-website | [text](licenses/website/types_mdast/LICENSE) |
+| `@types/ms` | 2.1.0 | MIT | hkp-website | [text](licenses/website/types_ms/LICENSE) |
 | `@types/node` | 20.19.37 | MIT | hkp-frontend | [text](licenses/frontend/types_node/LICENSE) |
 | `@types/react-dom` | 19.2.3 | MIT | hkp-frontend | [text](licenses/frontend/types_react-dom/LICENSE) |
-| `@types/react` | 19.2.14 | MIT | hkp-frontend | [text](licenses/frontend/types_react/LICENSE) |
+| `@types/react` | 19.2.14 | MIT | hkp-frontend, hkp-website | [text](licenses/frontend/types_react/LICENSE) |
 | `@types/trusted-types` | 2.0.7 | MIT | hkp-frontend | [text](licenses/frontend/types_trusted-types/LICENSE) |
+| `@types/unist` | 2.0.11 | MIT | hkp-website | [text](licenses/website/types_unist/LICENSE) |
+| `@types/unist` | 3.0.3 | MIT | hkp-website | [text](licenses/website/types_unist/LICENSE) |
+| `@ungap/structured-clone` | 1.3.0 | ISC | hkp-website | [text](licenses/website/ungap_structured-clone/LICENSE) |
 | `ansi-regex` | 5.0.1 | MIT | hkp-frontend | [text](licenses/frontend/ansi-regex/license) |
 | `ansi-styles` | 4.3.0 | MIT | hkp-frontend | [text](licenses/frontend/ansi-styles/license) |
 | `any-promise` | 1.3.0 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/any-promise/LICENSE) |
@@ -202,18 +214,24 @@ A `—` in the *Text* column means the package ships no licence file of its own;
 | `aria-hidden` | 1.2.6 | MIT | hkp-frontend | [text](licenses/frontend/aria-hidden/LICENSE) |
 | `async` | 3.2.6 | MIT | hkp-frontend | [text](licenses/frontend/async/LICENSE) |
 | `autoprefixer` | 10.4.27 | MIT | readymade-frontend | [text](licenses/frontend/autoprefixer/LICENSE) |
+| `bail` | 2.0.2 | MIT | hkp-website | [text](licenses/website/bail/license) |
 | `balanced-match` | 1.0.2 | MIT | hkp-frontend | [text](licenses/frontend/balanced-match/LICENSE.md) |
 | `baseline-browser-mapping` | 2.10.11 | Apache-2.0 | readymade-frontend | [text](licenses/frontend/baseline-browser-mapping/LICENSE.txt) |
 | `binary-extensions` | 2.3.0 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/binary-extensions/license) |
-| `brace-expansion` | 2.0.3 | MIT | hkp-frontend | [text](licenses/frontend/brace-expansion/LICENSE) |
+| `brace-expansion` | 2.1.4 | MIT | hkp-frontend | [text](licenses/frontend/brace-expansion/LICENSE) |
 | `braces` | 3.0.3 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/braces/LICENSE) |
-| `browser-tabs-lock` | 1.3.0 | MIT | hkp-frontend | [text](licenses/frontend/browser-tabs-lock/LICENSE) |
+| `browser-tabs-lock` | 1.3.0 | MIT | hkp-frontend, hkp-website | [text](licenses/frontend/browser-tabs-lock/LICENSE) |
 | `browserslist` | 4.28.1 | MIT | readymade-frontend | [text](licenses/frontend/browserslist/LICENSE) |
 | `camelcase-css` | 2.0.1 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/camelcase-css/license) |
 | `camelcase` | 5.3.1 | MIT | hkp-frontend | [text](licenses/frontend/camelcase/license) |
 | `caniuse-lite` | 1.0.30001781 | CC-BY-4.0 | readymade-frontend | [text](licenses/frontend/caniuse-lite/LICENSE) |
 | `cbor-extract` | 2.2.0 | MIT | hkp-frontend | [text](licenses/frontend/cbor-extract/LICENSE) |
 | `cbor-x` | 1.5.4 | MIT | hkp-frontend | [text](licenses/frontend/cbor-x/LICENSE) |
+| `ccount` | 2.0.1 | MIT | hkp-website | [text](licenses/website/ccount/license) |
+| `character-entities-html4` | 2.1.0 | MIT | hkp-website | [text](licenses/website/character-entities-html4/license) |
+| `character-entities-legacy` | 3.0.0 | MIT | hkp-website | [text](licenses/website/character-entities-legacy/license) |
+| `character-entities` | 2.0.2 | MIT | hkp-website | [text](licenses/website/character-entities/license) |
+| `character-reference-invalid` | 2.0.1 | MIT | hkp-website | [text](licenses/website/character-reference-invalid/license) |
 | `chokidar` | 3.6.0 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/chokidar/LICENSE) |
 | `class-variance-authority` | 0.7.1 | Apache-2.0 | hkp-frontend | [text](licenses/frontend/class-variance-authority/LICENSE) |
 | `cliui` | 6.0.0 | ISC | hkp-frontend | [text](licenses/frontend/cliui/LICENSE.txt) |
@@ -221,20 +239,24 @@ A `—` in the *Text* column means the package ships no licence file of its own;
 | `cmdk` | 1.1.1 | MIT | hkp-frontend | [text](licenses/frontend/cmdk/LICENSE.md) |
 | `color-convert` | 2.0.1 | MIT | hkp-frontend | [text](licenses/frontend/color-convert/LICENSE) |
 | `color-name` | 1.1.4 | MIT | hkp-frontend | [text](licenses/frontend/color-name/LICENSE) |
+| `comma-separated-tokens` | 2.0.3 | MIT | hkp-website | [text](licenses/website/comma-separated-tokens/license) |
 | `commander` | 4.1.1 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/commander/LICENSE) |
-| `cookie` | 1.1.1 | MIT | hkp-frontend | [text](licenses/frontend/cookie/LICENSE) |
+| `cookie` | 1.1.1 | MIT | hkp-frontend, hkp-website | [text](licenses/frontend/cookie/LICENSE) |
 | `cssesc` | 3.0.0 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/cssesc/LICENSE-MIT.txt) |
-| `csstype` | 3.2.3 | MIT | hkp-frontend | [text](licenses/frontend/csstype/LICENSE) |
+| `csstype` | 3.2.3 | MIT | hkp-frontend, hkp-website | [text](licenses/frontend/csstype/LICENSE) |
+| `debug` | 4.4.3 | MIT | hkp-website | [text](licenses/website/debug/LICENSE) |
 | `decamelize` | 1.2.0 | MIT | hkp-frontend | [text](licenses/frontend/decamelize/license) |
-| `dequal` | 2.0.3 | MIT | hkp-frontend | [text](licenses/frontend/dequal/license) |
+| `decode-named-character-reference` | 1.3.0 | MIT | hkp-website | [text](licenses/website/decode-named-character-reference/license) |
+| `dequal` | 2.0.3 | MIT | hkp-frontend, hkp-website | [text](licenses/frontend/dequal/license) |
 | `detect-libc` | 2.0.3 | Apache-2.0 | hkp-frontend | [text](licenses/frontend/detect-libc/LICENSE) |
 | `detect-node-es` | 1.1.0 | MIT | hkp-frontend | [text](licenses/frontend/detect-node-es/LICENSE) |
+| `devlop` | 1.1.0 | MIT | hkp-website | [text](licenses/website/devlop/license) |
 | `didyoumean` | 1.2.2 | Apache-2.0 | hkp-frontend, readymade-frontend | [text](licenses/frontend/didyoumean/LICENSE) |
 | `dijkstrajs` | 1.0.3 | MIT | hkp-frontend | [text](licenses/frontend/dijkstrajs/LICENSE.md) |
 | `dlv` | 1.1.3 | MIT | hkp-frontend, readymade-frontend | — |
 | `dnd-core` | 14.0.1 | MIT | hkp-frontend | [text](licenses/frontend/dnd-core/LICENSE) |
-| `dompurify` | 3.4.11 | (MPL-2.0 OR Apache-2.0) | hkp-frontend | [text](licenses/frontend/dompurify/LICENSE) |
-| `dpop` | 2.1.1 | MIT | hkp-frontend | [text](licenses/frontend/dpop/LICENSE.md) |
+| `dompurify` | 3.4.13 | (MPL-2.0 OR Apache-2.0) | hkp-frontend | [text](licenses/frontend/dompurify/LICENSE) |
+| `dpop` | 2.1.1 | MIT | hkp-frontend, hkp-website | [text](licenses/frontend/dpop/LICENSE.md) |
 | `ejs` | 3.1.10 | Apache-2.0 | hkp-frontend | [text](licenses/frontend/ejs/LICENSE) |
 | `electron-to-chromium` | 1.5.328 | ISC | readymade-frontend | [text](licenses/frontend/electron-to-chromium/LICENSE) |
 | `embla-carousel-react` | 8.6.0 | MIT | hkp-frontend | — |
@@ -242,11 +264,14 @@ A `—` in the *Text* column means the package ships no licence file of its own;
 | `embla-carousel` | 8.6.0 | MIT | hkp-frontend | — |
 | `emoji-regex` | 8.0.0 | MIT | hkp-frontend | [text](licenses/frontend/emoji-regex/LICENSE-MIT.txt) |
 | `encode-utf8` | 1.0.3 | MIT | hkp-frontend | — |
-| `es-cookie` | 1.3.2 | MIT | hkp-frontend | [text](licenses/frontend/es-cookie/LICENSE.md) |
+| `es-cookie` | 1.3.2 | MIT | hkp-frontend, hkp-website | [text](licenses/frontend/es-cookie/LICENSE.md) |
 | `escalade` | 3.2.0 | MIT | readymade-frontend | [text](licenses/frontend/escalade/license) |
+| `escape-string-regexp` | 5.0.0 | MIT | hkp-website | [text](licenses/website/escape-string-regexp/license) |
+| `estree-util-is-identifier-name` | 3.0.0 | MIT | hkp-website | [text](licenses/website/estree-util-is-identifier-name/license) |
 | `event-source-polyfill` | 1.0.31 | MIT | hkp-frontend | [text](licenses/frontend/event-source-polyfill/LICENSE) |
 | `eventemitter3` | 4.0.7 | MIT | hkp-frontend | [text](licenses/frontend/eventemitter3/LICENSE) |
 | `expression-eval` | 5.0.1 | MIT | hkp-frontend | [text](licenses/frontend/expression-eval/LICENSE) |
+| `extend` | 3.0.2 | MIT | hkp-website | [text](licenses/website/extend/LICENSE) |
 | `fast-deep-equal` | 3.1.3 | MIT | hkp-frontend | [text](licenses/frontend/fast-deep-equal/LICENSE) |
 | `fast-glob` | 3.3.3 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/fast-glob/LICENSE) |
 | `fastq` | 1.17.1 | ISC | hkp-frontend | [text](licenses/frontend/fastq/LICENSE) |
@@ -257,52 +282,113 @@ A `—` in the *Text* column means the package ships no licence file of its own;
 | `find-up` | 4.1.0 | MIT | hkp-frontend | [text](licenses/frontend/find-up/license) |
 | `flat` | 6.0.1 | BSD-3-Clause | hkp-frontend | [text](licenses/frontend/flat/LICENSE) |
 | `fraction.js` | 5.3.4 | MIT | readymade-frontend | [text](licenses/frontend/fraction.js/LICENSE) |
-| `fsevents` | 2.3.3 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/fsevents/LICENSE) |
 | `function-bind` | 1.1.2 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/function-bind/LICENSE) |
 | `get-caller-file` | 2.0.5 | ISC | hkp-frontend | [text](licenses/frontend/get-caller-file/LICENSE.md) |
 | `get-nonce` | 1.0.1 | MIT | hkp-frontend | [text](licenses/frontend/get-nonce/LICENSE) |
+| `gifuct-js` | 2.1.2 | MIT | hkp-website | [text](licenses/website/gifuct-js/LICENSE) |
 | `glob-parent` | 5.1.2 | ISC | hkp-frontend, readymade-frontend | [text](licenses/frontend/glob-parent/LICENSE) |
 | `glob-parent` | 6.0.2 | ISC | hkp-frontend, readymade-frontend | [text](licenses/frontend/glob-parent/LICENSE) |
 | `hasown` | 2.0.2 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/hasown/LICENSE) |
+| `hast-util-to-jsx-runtime` | 2.3.6 | MIT | hkp-website | [text](licenses/website/hast-util-to-jsx-runtime/license) |
+| `hast-util-whitespace` | 3.0.0 | MIT | hkp-website | [text](licenses/website/hast-util-whitespace/license) |
 | `hoist-non-react-statics` | 3.3.2 | BSD-3-Clause | hkp-frontend | [text](licenses/frontend/hoist-non-react-statics/LICENSE.md) |
+| `html-url-attributes` | 3.0.1 | MIT | hkp-website | [text](licenses/website/html-url-attributes/license) |
+| `inline-style-parser` | 0.2.7 | MIT | hkp-website | [text](licenses/website/inline-style-parser/LICENSE) |
+| `is-alphabetical` | 2.0.1 | MIT | hkp-website | [text](licenses/website/is-alphabetical/license) |
+| `is-alphanumerical` | 2.0.1 | MIT | hkp-website | [text](licenses/website/is-alphanumerical/license) |
 | `is-binary-path` | 2.1.0 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/is-binary-path/license) |
 | `is-core-module` | 2.16.1 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/is-core-module/LICENSE) |
+| `is-decimal` | 2.0.1 | MIT | hkp-website | [text](licenses/website/is-decimal/license) |
 | `is-extglob` | 2.1.1 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/is-extglob/LICENSE) |
 | `is-fullwidth-code-point` | 3.0.0 | MIT | hkp-frontend | [text](licenses/frontend/is-fullwidth-code-point/license) |
 | `is-glob` | 4.0.3 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/is-glob/LICENSE) |
+| `is-hexadecimal` | 2.0.1 | MIT | hkp-website | [text](licenses/website/is-hexadecimal/license) |
 | `is-number` | 7.0.0 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/is-number/LICENSE) |
+| `is-plain-obj` | 4.1.0 | MIT | hkp-website | [text](licenses/website/is-plain-obj/license) |
 | `jake` | 10.9.4 | Apache-2.0 | hkp-frontend | — |
 | `jiti` | 1.21.7 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/jiti/LICENSE) |
 | `jose` | 6.2.2 | MIT | hkp-frontend | [text](licenses/frontend/jose/LICENSE.md) |
+| `jose` | 6.2.3 | MIT | hkp-website | [text](licenses/website/jose/LICENSE.md) |
+| `js-binary-schema-parser` | 2.0.3 | MIT | hkp-website | [text](licenses/website/js-binary-schema-parser/LICENSE) |
 | `jsep` | 0.3.5 | MIT | hkp-frontend | [text](licenses/frontend/jsep/LICENSE) |
 | `jwt-decode` | 3.1.2 | MIT | hkp-frontend | [text](licenses/frontend/jwt-decode/LICENSE) |
 | `lilconfig` | 3.1.3 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/lilconfig/LICENSE) |
 | `lines-and-columns` | 1.2.4 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/lines-and-columns/LICENSE) |
 | `locate-path` | 5.0.0 | MIT | hkp-frontend | [text](licenses/frontend/locate-path/license) |
-| `lodash` | 4.18.1 | MIT | hkp-frontend | [text](licenses/frontend/lodash/LICENSE) |
+| `lodash` | 4.18.1 | MIT | hkp-frontend, hkp-website | [text](licenses/frontend/lodash/LICENSE) |
+| `longest-streak` | 3.1.0 | MIT | hkp-website | [text](licenses/website/longest-streak/license) |
+| `lucide-react` | 1.16.0 | ISC | hkp-website | [text](licenses/website/lucide-react/LICENSE) |
 | `lucide-react` | 1.7.0 | ISC | hkp-frontend, readymade-frontend | [text](licenses/frontend/lucide-react/LICENSE) |
-| `lz-string` | 1.5.0 | MIT | hkp-frontend | [text](licenses/frontend/lz-string/LICENSE) |
+| `lz-string` | 1.5.0 | MIT | hkp-frontend, hkp-website | [text](licenses/frontend/lz-string/LICENSE) |
+| `markdown-table` | 3.0.4 | MIT | hkp-website | [text](licenses/website/markdown-table/license) |
 | `marked` | 14.0.0 | MIT | hkp-frontend | [text](licenses/frontend/marked/LICENSE.md) |
+| `mdast-util-find-and-replace` | 3.0.2 | MIT | hkp-website | [text](licenses/website/mdast-util-find-and-replace/license) |
+| `mdast-util-from-markdown` | 2.0.3 | MIT | hkp-website | [text](licenses/website/mdast-util-from-markdown/license) |
+| `mdast-util-gfm-autolink-literal` | 2.0.1 | MIT | hkp-website | [text](licenses/website/mdast-util-gfm-autolink-literal/license) |
+| `mdast-util-gfm-footnote` | 2.1.0 | MIT | hkp-website | [text](licenses/website/mdast-util-gfm-footnote/license) |
+| `mdast-util-gfm-strikethrough` | 2.0.0 | MIT | hkp-website | [text](licenses/website/mdast-util-gfm-strikethrough/license) |
+| `mdast-util-gfm-table` | 2.0.0 | MIT | hkp-website | [text](licenses/website/mdast-util-gfm-table/license) |
+| `mdast-util-gfm-task-list-item` | 2.0.0 | MIT | hkp-website | [text](licenses/website/mdast-util-gfm-task-list-item/license) |
+| `mdast-util-gfm` | 3.1.0 | MIT | hkp-website | [text](licenses/website/mdast-util-gfm/license) |
+| `mdast-util-mdx-expression` | 2.0.1 | MIT | hkp-website | [text](licenses/website/mdast-util-mdx-expression/license) |
+| `mdast-util-mdx-jsx` | 3.2.0 | MIT | hkp-website | [text](licenses/website/mdast-util-mdx-jsx/license) |
+| `mdast-util-mdxjs-esm` | 2.0.1 | MIT | hkp-website | [text](licenses/website/mdast-util-mdxjs-esm/license) |
+| `mdast-util-phrasing` | 4.1.0 | MIT | hkp-website | [text](licenses/website/mdast-util-phrasing/license) |
+| `mdast-util-to-hast` | 13.2.1 | MIT | hkp-website | [text](licenses/website/mdast-util-to-hast/license) |
+| `mdast-util-to-markdown` | 2.1.2 | MIT | hkp-website | [text](licenses/website/mdast-util-to-markdown/license) |
+| `mdast-util-to-string` | 4.0.0 | MIT | hkp-website | [text](licenses/website/mdast-util-to-string/license) |
 | `memoize-one` | 5.2.1 | MIT | hkp-frontend | [text](licenses/frontend/memoize-one/LICENSE) |
 | `merge2` | 1.4.1 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/merge2/LICENSE) |
+| `micromark-core-commonmark` | 2.0.3 | MIT | hkp-website | [text](licenses/website/micromark-core-commonmark/license) |
+| `micromark-extension-gfm-autolink-literal` | 2.1.0 | MIT | hkp-website | [text](licenses/website/micromark-extension-gfm-autolink-literal/license) |
+| `micromark-extension-gfm-footnote` | 2.1.0 | MIT | hkp-website | [text](licenses/website/micromark-extension-gfm-footnote/license) |
+| `micromark-extension-gfm-strikethrough` | 2.1.0 | MIT | hkp-website | [text](licenses/website/micromark-extension-gfm-strikethrough/license) |
+| `micromark-extension-gfm-table` | 2.1.1 | MIT | hkp-website | [text](licenses/website/micromark-extension-gfm-table/license) |
+| `micromark-extension-gfm-tagfilter` | 2.0.0 | MIT | hkp-website | [text](licenses/website/micromark-extension-gfm-tagfilter/license) |
+| `micromark-extension-gfm-task-list-item` | 2.1.0 | MIT | hkp-website | [text](licenses/website/micromark-extension-gfm-task-list-item/license) |
+| `micromark-extension-gfm` | 3.0.0 | MIT | hkp-website | [text](licenses/website/micromark-extension-gfm/license) |
+| `micromark-factory-destination` | 2.0.1 | MIT | hkp-website | [text](licenses/website/micromark-factory-destination/license) |
+| `micromark-factory-label` | 2.0.1 | MIT | hkp-website | [text](licenses/website/micromark-factory-label/license) |
+| `micromark-factory-space` | 2.0.1 | MIT | hkp-website | [text](licenses/website/micromark-factory-space/license) |
+| `micromark-factory-title` | 2.0.1 | MIT | hkp-website | [text](licenses/website/micromark-factory-title/license) |
+| `micromark-factory-whitespace` | 2.0.1 | MIT | hkp-website | [text](licenses/website/micromark-factory-whitespace/license) |
+| `micromark-util-character` | 2.1.1 | MIT | hkp-website | [text](licenses/website/micromark-util-character/license) |
+| `micromark-util-chunked` | 2.0.1 | MIT | hkp-website | [text](licenses/website/micromark-util-chunked/license) |
+| `micromark-util-classify-character` | 2.0.1 | MIT | hkp-website | [text](licenses/website/micromark-util-classify-character/license) |
+| `micromark-util-combine-extensions` | 2.0.1 | MIT | hkp-website | [text](licenses/website/micromark-util-combine-extensions/license) |
+| `micromark-util-decode-numeric-character-reference` | 2.0.2 | MIT | hkp-website | [text](licenses/website/micromark-util-decode-numeric-character-reference/license) |
+| `micromark-util-decode-string` | 2.0.1 | MIT | hkp-website | [text](licenses/website/micromark-util-decode-string/license) |
+| `micromark-util-encode` | 2.0.1 | MIT | hkp-website | [text](licenses/website/micromark-util-encode/license) |
+| `micromark-util-html-tag-name` | 2.0.1 | MIT | hkp-website | [text](licenses/website/micromark-util-html-tag-name/license) |
+| `micromark-util-normalize-identifier` | 2.0.1 | MIT | hkp-website | [text](licenses/website/micromark-util-normalize-identifier/license) |
+| `micromark-util-resolve-all` | 2.0.1 | MIT | hkp-website | [text](licenses/website/micromark-util-resolve-all/license) |
+| `micromark-util-sanitize-uri` | 2.0.1 | MIT | hkp-website | [text](licenses/website/micromark-util-sanitize-uri/license) |
+| `micromark-util-subtokenize` | 2.1.0 | MIT | hkp-website | [text](licenses/website/micromark-util-subtokenize/license) |
+| `micromark-util-symbol` | 2.0.1 | MIT | hkp-website | [text](licenses/website/micromark-util-symbol/license) |
+| `micromark-util-types` | 2.0.2 | MIT | hkp-website | [text](licenses/website/micromark-util-types/license) |
+| `micromark` | 4.0.2 | MIT | hkp-website | [text](licenses/website/micromark/license) |
 | `micromatch` | 4.0.8 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/micromatch/LICENSE) |
 | `minimatch` | 5.1.9 | ISC | hkp-frontend | [text](licenses/frontend/minimatch/LICENSE) |
 | `moment` | 2.30.1 | MIT | hkp-frontend | [text](licenses/frontend/moment/LICENSE) |
 | `monaco-editor` | 0.52.2 | MIT | readymade-frontend | [text](licenses/frontend/monaco-editor/LICENSE) |
 | `monaco-editor` | 0.55.1 | MIT | hkp-frontend | [text](licenses/frontend/monaco-editor/LICENSE) |
+| `ms` | 2.1.3 | MIT | hkp-website | [text](licenses/website/ms/license.md) |
 | `mz` | 2.7.0 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/mz/LICENSE) |
-| `nanoid` | 3.3.12 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/nanoid/LICENSE) |
+| `nanoid` | 3.3.18 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/nanoid/LICENSE) |
 | `next-themes` | 0.4.6 | MIT | hkp-frontend | [text](licenses/frontend/next-themes/license.md) |
 | `node-gyp-build-optional-packages` | 5.1.1 | MIT | hkp-frontend | [text](licenses/frontend/node-gyp-build-optional-packages/LICENSE) |
 | `node-releases` | 2.0.36 | MIT | readymade-frontend | [text](licenses/frontend/node-releases/LICENSE) |
 | `normalize-path` | 3.0.0 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/normalize-path/LICENSE) |
 | `oauth4webapi` | 3.8.5 | MIT | hkp-frontend | [text](licenses/frontend/oauth4webapi/LICENSE.md) |
+| `oauth4webapi` | 3.8.6 | MIT | hkp-website | [text](licenses/website/oauth4webapi/LICENSE.md) |
 | `object-assign` | 4.1.1 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/object-assign/license) |
 | `object-hash` | 3.0.0 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/object-hash/LICENSE) |
 | `openid-client` | 6.8.2 | MIT | hkp-frontend | [text](licenses/frontend/openid-client/LICENSE.md) |
+| `openid-client` | 6.8.4 | MIT | hkp-website | [text](licenses/website/openid-client/LICENSE.md) |
 | `p-limit` | 2.3.0 | MIT | hkp-frontend | [text](licenses/frontend/p-limit/license) |
 | `p-locate` | 4.1.0 | MIT | hkp-frontend | [text](licenses/frontend/p-locate/license) |
 | `p-try` | 2.2.0 | MIT | hkp-frontend | [text](licenses/frontend/p-try/license) |
+| `parse-entities` | 4.0.2 | MIT | hkp-website | [text](licenses/website/parse-entities/license) |
 | `path-exists` | 4.0.0 | MIT | hkp-frontend | [text](licenses/frontend/path-exists/license) |
 | `path-parse` | 1.0.7 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/path-parse/LICENSE) |
 | `peerjs-js-binarypack` | 2.1.0 | MIT | hkp-frontend | [text](licenses/frontend/peerjs-js-binarypack/LICENSE) |
@@ -319,7 +405,8 @@ A `—` in the *Text* column means the package ships no licence file of its own;
 | `postcss-nested` | 6.2.0 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/postcss-nested/LICENSE) |
 | `postcss-selector-parser` | 6.1.2 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/postcss-selector-parser/LICENSE-MIT) |
 | `postcss-value-parser` | 4.2.0 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/postcss-value-parser/LICENSE) |
-| `postcss` | 8.5.15 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/postcss/LICENSE) |
+| `postcss` | 8.5.26 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/postcss/LICENSE) |
+| `property-information` | 7.1.0 | MIT | hkp-website | [text](licenses/website/property-information/license) |
 | `qrcode.react` | 4.2.0 | ISC | hkp-frontend | [text](licenses/frontend/qrcode.react/LICENSE) |
 | `qrcode` | 1.5.3 | MIT | hkp-frontend | [text](licenses/frontend/qrcode/license) |
 | `queue-microtask` | 1.2.3 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/queue-microtask/LICENSE) |
@@ -327,19 +414,24 @@ A `—` in the *Text* column means the package ships no licence file of its own;
 | `react-colorful` | 5.6.1 | MIT | hkp-frontend | [text](licenses/frontend/react-colorful/LICENSE) |
 | `react-dnd-html5-backend` | 14.1.0 | MIT | hkp-frontend | [text](licenses/frontend/react-dnd-html5-backend/LICENSE) |
 | `react-dnd` | 14.0.5 | MIT | hkp-frontend | [text](licenses/frontend/react-dnd/LICENSE) |
-| `react-dom` | 19.2.4 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/react-dom/LICENSE) |
+| `react-dom` | 19.2.4 | MIT | hkp-frontend, hkp-website, readymade-frontend | [text](licenses/frontend/react-dom/LICENSE) |
 | `react-is` | 16.13.1 | MIT | hkp-frontend | [text](licenses/frontend/react-is/LICENSE) |
+| `react-markdown` | 10.1.0 | MIT | hkp-website | [text](licenses/website/react-markdown/license) |
 | `react-remove-scroll-bar` | 2.3.8 | MIT | hkp-frontend | — |
 | `react-remove-scroll` | 2.7.2 | MIT | hkp-frontend | [text](licenses/frontend/react-remove-scroll/LICENSE) |
-| `react-router-dom` | 7.17.0 | MIT | hkp-frontend | [text](licenses/frontend/react-router-dom/LICENSE.md) |
-| `react-router` | 7.17.0 | MIT | hkp-frontend | [text](licenses/frontend/react-router/LICENSE.md) |
+| `react-router-dom` | 7.18.2 | MIT | hkp-frontend, hkp-website | [text](licenses/frontend/react-router-dom/LICENSE.md) |
+| `react-router` | 7.18.2 | MIT | hkp-frontend, hkp-website | [text](licenses/frontend/react-router/LICENSE.md) |
 | `react-style-singleton` | 2.2.3 | MIT | hkp-frontend | [text](licenses/frontend/react-style-singleton/LICENSE) |
 | `react-window` | 1.8.11 | MIT | hkp-frontend | [text](licenses/frontend/react-window/LICENSE.md) |
-| `react` | 19.2.4 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/react/LICENSE) |
+| `react` | 19.2.4 | MIT | hkp-frontend, hkp-website, readymade-frontend | [text](licenses/frontend/react/LICENSE) |
 | `read-cache` | 1.0.0 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/read-cache/LICENSE) |
 | `readdirp` | 3.6.0 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/readdirp/LICENSE) |
 | `redux` | 4.2.1 | MIT | hkp-frontend | [text](licenses/frontend/redux/LICENSE.md) |
 | `redux` | 5.0.1 | MIT | hkp-frontend | [text](licenses/frontend/redux/LICENSE.md) |
+| `remark-gfm` | 4.0.1 | MIT | hkp-website | [text](licenses/website/remark-gfm/license) |
+| `remark-parse` | 11.0.0 | MIT | hkp-website | [text](licenses/website/remark-parse/license) |
+| `remark-rehype` | 11.1.2 | MIT | hkp-website | [text](licenses/website/remark-rehype/license) |
+| `remark-stringify` | 11.0.0 | MIT | hkp-website | [text](licenses/website/remark-stringify/license) |
 | `require-directory` | 2.1.1 | MIT | hkp-frontend | [text](licenses/frontend/require-directory/LICENSE) |
 | `require-main-filename` | 2.0.0 | ISC | hkp-frontend | [text](licenses/frontend/require-main-filename/LICENSE.txt) |
 | `resize-observer-polyfill` | 1.5.1 | MIT | hkp-frontend | [text](licenses/frontend/resize-observer-polyfill/LICENSE) |
@@ -347,16 +439,20 @@ A `—` in the *Text* column means the package ships no licence file of its own;
 | `reusify` | 1.0.4 | MIT | hkp-frontend | [text](licenses/frontend/reusify/LICENSE) |
 | `reusify` | 1.1.0 | MIT | readymade-frontend | [text](licenses/frontend/reusify/LICENSE) |
 | `run-parallel` | 1.2.0 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/run-parallel/LICENSE) |
-| `scheduler` | 0.27.0 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/scheduler/LICENSE) |
+| `scheduler` | 0.27.0 | MIT | hkp-frontend, hkp-website, readymade-frontend | [text](licenses/frontend/scheduler/LICENSE) |
 | `sdp` | 3.2.0 | MIT | hkp-frontend | [text](licenses/frontend/sdp/LICENSE) |
 | `set-blocking` | 2.0.0 | ISC | hkp-frontend | [text](licenses/frontend/set-blocking/LICENSE.txt) |
-| `set-cookie-parser` | 2.7.2 | MIT | hkp-frontend | [text](licenses/frontend/set-cookie-parser/LICENSE) |
+| `set-cookie-parser` | 2.7.2 | MIT | hkp-frontend, hkp-website | [text](licenses/frontend/set-cookie-parser/LICENSE) |
 | `setimmediate` | 1.0.5 | MIT | hkp-frontend | [text](licenses/frontend/setimmediate/LICENSE.txt) |
 | `sonner` | 1.7.4 | MIT | hkp-frontend | [text](licenses/frontend/sonner/LICENSE.md) |
 | `source-map-js` | 1.2.1 | BSD-3-Clause | hkp-frontend, readymade-frontend | [text](licenses/frontend/source-map-js/LICENSE) |
+| `space-separated-tokens` | 2.0.2 | MIT | hkp-website | [text](licenses/website/space-separated-tokens/license) |
 | `state-local` | 1.0.7 | MIT | hkp-frontend | [text](licenses/frontend/state-local/LICENSE) |
 | `string-width` | 4.2.3 | MIT | hkp-frontend | [text](licenses/frontend/string-width/license) |
+| `stringify-entities` | 4.0.4 | MIT | hkp-website | [text](licenses/website/stringify-entities/license) |
 | `strip-ansi` | 6.0.1 | MIT | hkp-frontend | [text](licenses/frontend/strip-ansi/license) |
+| `style-to-js` | 1.1.21 | MIT | hkp-website | [text](licenses/website/style-to-js/LICENSE) |
+| `style-to-object` | 1.0.14 | MIT | hkp-website | [text](licenses/website/style-to-object/LICENSE) |
 | `sucrase` | 3.35.1 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/sucrase/LICENSE) |
 | `supports-preserve-symlinks-flag` | 1.0.0 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/supports-preserve-symlinks-flag/LICENSE) |
 | `swr` | 2.4.1 | MIT | hkp-frontend | [text](licenses/frontend/swr/LICENSE) |
@@ -367,16 +463,26 @@ A `—` in the *Text* column means the package ships no licence file of its own;
 | `thenify` | 3.3.1 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/thenify/LICENSE) |
 | `tinyglobby` | 0.2.17 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/tinyglobby/LICENSE) |
 | `to-regex-range` | 5.0.1 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/to-regex-range/LICENSE) |
+| `trim-lines` | 3.0.1 | MIT | hkp-website | [text](licenses/website/trim-lines/license) |
+| `trough` | 2.2.0 | MIT | hkp-website | [text](licenses/website/trough/license) |
 | `ts-interface-checker` | 0.1.13 | Apache-2.0 | hkp-frontend, readymade-frontend | [text](licenses/frontend/ts-interface-checker/LICENSE) |
 | `tslib` | 2.6.2 | 0BSD | hkp-frontend | [text](licenses/frontend/tslib/LICENSE.txt) |
 | `undici-types` | 6.21.0 | MIT | hkp-frontend | [text](licenses/frontend/undici-types/LICENSE) |
+| `unified` | 11.0.5 | MIT | hkp-website | [text](licenses/website/unified/license) |
 | `unique-names-generator` | 4.7.1 | MIT | hkp-frontend | [text](licenses/frontend/unique-names-generator/LICENSE) |
+| `unist-util-is` | 6.0.1 | MIT | hkp-website | [text](licenses/website/unist-util-is/license) |
+| `unist-util-position` | 5.0.0 | MIT | hkp-website | [text](licenses/website/unist-util-position/license) |
+| `unist-util-stringify-position` | 4.0.0 | MIT | hkp-website | [text](licenses/website/unist-util-stringify-position/license) |
+| `unist-util-visit-parents` | 6.0.2 | MIT | hkp-website | [text](licenses/website/unist-util-visit-parents/license) |
+| `unist-util-visit` | 5.1.0 | MIT | hkp-website | [text](licenses/website/unist-util-visit/license) |
 | `update-browserslist-db` | 1.2.3 | MIT | readymade-frontend | [text](licenses/frontend/update-browserslist-db/LICENSE) |
 | `use-callback-ref` | 1.3.3 | MIT | hkp-frontend | [text](licenses/frontend/use-callback-ref/LICENSE) |
 | `use-sidecar` | 1.1.3 | MIT | hkp-frontend | [text](licenses/frontend/use-sidecar/LICENSE) |
 | `use-sync-external-store` | 1.6.0 | MIT | hkp-frontend | [text](licenses/frontend/use-sync-external-store/LICENSE) |
 | `util-deprecate` | 1.0.2 | MIT | hkp-frontend, readymade-frontend | [text](licenses/frontend/util-deprecate/LICENSE) |
 | `uuid` | 14.0.0 | MIT | hkp-frontend | [text](licenses/frontend/uuid/LICENSE.md) |
+| `vfile-message` | 4.0.3 | MIT | hkp-website | [text](licenses/website/vfile-message/license) |
+| `vfile` | 6.0.3 | MIT | hkp-website | [text](licenses/website/vfile/license) |
 | `web-streams-polyfill` | 3.3.3 | MIT | hkp-frontend | [text](licenses/frontend/web-streams-polyfill/LICENSE) |
 | `web-vitals` | 2.1.4 | Apache-2.0 | hkp-frontend | [text](licenses/frontend/web-vitals/LICENSE) |
 | `webrtc-adapter` | 8.2.3 | BSD-3-Clause | hkp-frontend | [text](licenses/frontend/webrtc-adapter/LICENSE.md) |
@@ -385,6 +491,7 @@ A `—` in the *Text* column means the package ships no licence file of its own;
 | `y18n` | 4.0.3 | ISC | hkp-frontend | [text](licenses/frontend/y18n/LICENSE) |
 | `yargs-parser` | 18.1.3 | ISC | hkp-frontend | [text](licenses/frontend/yargs-parser/LICENSE.txt) |
 | `yargs` | 15.4.1 | MIT | hkp-frontend | [text](licenses/frontend/yargs/LICENSE) |
+| `zwitch` | 2.0.4 | MIT | hkp-website | [text](licenses/website/zwitch/license) |
 
 ## What each service pulls in
 

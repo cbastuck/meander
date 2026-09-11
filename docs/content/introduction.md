@@ -1,6 +1,6 @@
 # Introduction
 
-HKP is a framework for building **interactive apps** out of small, composable
+Readymade is a framework for building **interactive apps** out of small, composable
 parts — apps that run across several machines at once, where you decide which
 part runs where.
 

@@ -74,6 +74,33 @@ function boardDocument(board: CloudBoard): Record<string, unknown> {
   return { ...data, boardName: board.name };
 }
 
+/**
+ * The default board reader: the localStorage store the browser hosts save to.
+ * Boards are stored there wrapped ({source, createdAt, description}); what
+ * belongs in the cloud is the board inside, not the envelope around it.
+ */
+async function readLocalBoard(
+  name: string,
+): Promise<Record<string, unknown> | null> {
+  return (getLocalBoard(name) as Record<string, unknown> | undefined) ?? null;
+}
+
+/** The description a locally saved board's envelope carries, if any. */
+function localBoardDescription(name: string): string | undefined {
+  const { description } = JSON.parse(
+    localStorage.getItem(`${localStoragePrefix}${name}`) ?? "{}",
+  ) as { description?: string };
+  return description;
+}
+
+export interface CloudBoardSourcesOptions {
+  /** Reads a saved board by name, for the upload action. Defaults to the
+   *  localStorage board store, which is where the browser hosts keep boards;
+   *  a host with storage of its own (the Readymade app's board files) passes
+   *  its own reader. Resolving null means "no such board here". */
+  loadBoard?: (name: string) => Promise<Record<string, unknown> | null>;
+}
+
 export interface CloudBoardSources {
   /** The "Shared" source folder (With me / From me). */
   sharedSource: FolderNode;
@@ -95,7 +122,10 @@ export interface CloudBoardSources {
   }) => Promise<CloudBoard | null>;
 }
 
-export function useCloudBoardSources(): CloudBoardSources {
+export function useCloudBoardSources(
+  options: CloudBoardSourcesOptions = {},
+): CloudBoardSources {
+  const { loadBoard } = options;
   const { user } = useAppContext();
   const [cloudBoards, setCloudBoards] = useState<CloudBoardSummary[]>([]);
 
@@ -121,18 +151,22 @@ export function useCloudBoardSources(): CloudBoardSources {
     () =>
       user
         ? async (name: string) => {
-            // Saved boards are stored wrapped ({source, createdAt,
-            // description}); what belongs in the cloud is the board inside,
-            // not the envelope around it.
-            const board = getLocalBoard(name) as
-              | Record<string, unknown>
-              | undefined;
+            const board = await (loadBoard ?? readLocalBoard)(name);
             if (!board) {
               throw new Error("Board not found on this device");
             }
-            const { description } = JSON.parse(
-              localStorage.getItem(`${localStoragePrefix}${name}`) ?? "{}",
-            ) as { description?: string };
+            // The local store keeps the description in the envelope around
+            // the board; a host with a store of its own has it on the
+            // document itself.
+            let description: string | undefined;
+            if (loadBoard) {
+              description =
+                typeof board.description === "string"
+                  ? board.description
+                  : undefined;
+            } else {
+              description = localBoardDescription(name);
+            }
             await upsertCloudBoard(
               { idToken: user.idToken },
               {
@@ -148,7 +182,7 @@ export function useCloudBoardSources(): CloudBoardSources {
             await refreshCloudBoards();
           }
         : undefined,
-    [user, refreshCloudBoards],
+    [user, loadBoard, refreshCloudBoards],
   );
 
   const sharedSource = useMemo<FolderNode>(() => {

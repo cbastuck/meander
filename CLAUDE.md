@@ -285,8 +285,10 @@ meander-ios/           iOS-specific native layer
 
 | Where | What it holds |
 | ----- | ------------- |
+| `docs/content/introduction.md` | The first-read narrative: what Readymade is, what people build with it, and the shape of a board |
 | `docs/content/concepts/` | How the system is put together and why — one page per idea (board, runtime, service, units, mounts, coordinator, cloud boards, logging) |
 | `docs/content/services/` | One page per service |
+| `docs/content/board-json.md` | The serialisation format: what a board document contains, field by field, and what it deliberately does not |
 | `docs/content/repository.md` | How the checkout is laid out: what is in the superproject, what is a submodule, and what follows from that when committing, building and testing |
 | `docs/content/testing.md` | What runs where: the per-area suites behind `run-all-tests.sh`, the Playwright suite in `e2e/` across three host profiles, and what CI actually covers |
 | `docs/content/targets.md` | Where a board runs: the web, desktop, iOS and Android targets, what each host adds, which features are compiled in per platform, and what each build produces |
